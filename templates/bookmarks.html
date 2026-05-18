@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bookmarks</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #111;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .verse {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .ref {
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        a {
+            color: #6aa9ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Bookmarked Verses</h2>
+
+{% for v in verses %}
+
+<div class="verse">
+
+    <div class="ref">
+        Surah {{ v.surah }}, Ayah {{ v.ayah }}
+    </div>
+
+    <div>
+        {{ v.text }}
+    </div>
+
+    <br>
+
+    <a href="/?surah={{ v.surah }}&ayah={{ v.ayah }}">
+        Go to verse
+    </a>
+
+</div>
+
+{% endfor %}
+
+</body>
+</html>
