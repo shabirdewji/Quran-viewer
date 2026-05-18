@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quran Reader</title>
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<style>
+
+:root {
+    --bg: #0f0f10;
+    --text: #ffffff;
+    --muted: #888;
+    --border: #2a2a2a;
+    --accent: #4caf50;
+
+    --card: #1c1c1e;
+}
+
+/* LIGHT THEME */
+body.light {
+    --bg: #f6f6f7;
+    --text: #111;
+    --muted: #666;
+    --border: #e2e2e2;
+    --accent: #2563eb;
+
+    --card: #ffffff;
+}
+
+/* -------------------------------- */
+/* GLOBAL */
+/* -------------------------------- */
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+
+    overflow: hidden;
+    height: 100%;
+
+    overscroll-behavior: none;
+    touch-action: pan-y;
+
+}
+
+/* -------------------------------- */
+/* TOP BAR */
+/* -------------------------------- */
+
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    z-index: 1000;
+
+    padding:
+        calc(env(safe-area-inset-top) + 10px)
+        18px
+        12px
+        18px;
+
+    background: rgba(15,15,16,0.92);
+    backdrop-filter: blur(16px);
+
+    border-bottom: 1px solid var(--border);
+}
+
+.surah {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+/* -------------------------------- */
+/* MAIN PAGE */
+/* -------------------------------- */
+
+.page {
+    height: 100vh;
+    height: 100dvh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        110px 22px
+        calc(120px + env(safe-area-inset-bottom))
+        22px;
+
+    box-sizing: border-box;
+}
+
+/* -------------------------------- */
+/* AYAH TEXT */
+/* -------------------------------- */
+
+.ayah {
+    font-size: 34px;
+    line-height: 1.9;
+    text-align: center;
+    font-weight: 500;
+
+    max-width: 700px;
+    margin: 0 auto;
+
+    letter-spacing: 0.2px;
+}
+
+/* -------------------------------- */
+/* FOOTER */
+/* -------------------------------- */
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    background: rgba(15,15,16,0.95);
+    backdrop-filter: blur(14px);
+
+    border-top: 1px solid var(--border);
+
+    padding:
+        12px 18px
+        calc(env(safe-area-inset-bottom) + 14px)
+        18px;
+}
+
+/* -------------------------------- */
+/* CONTROLS */
+/* -------------------------------- */
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.read-box {
+    transition: opacity 0.2s ease;
+}
+
+.read-box.checked {
+    opacity: 0.5;
+}
+
+.read-box input {
+    width: 28px;
+    height: 28px;
+    accent-color: var(--accent);
+}
+
+.pin {
+    background: #2c2c2e;
+    border: none;
+    color: white;
+
+    padding: 10px 14px;
+    border-radius: 12px;
+
+    font-size: 18px;
+}
+.pin.active {
+    background: var(--accent);
+    transform: scale(1.05);
+    transition: 0.2s ease;
+}
+
+/* -------------------------------- */
+/* SWIPE HINT */
+/* -------------------------------- */
+
+.hint {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* -------------------------------- */
+/* MOBILE TWEAK */
+/* -------------------------------- */
+
+@media (max-width: 390px) {
+    .ayah {
+        font-size: 30px;
+    }
+}
+
+
+.search-bar {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 8px 10px;
+
+    background: #1c1c1e;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+
+    color: white;
+    font-size: 14px;
+
+    outline: none;
+}
+
+.search-bar select {
+    flex: 2;
+
+    padding: 8px 10px;
+
+    background: #1c1c1e;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+
+    color: white;
+    font-size: 14px;
+
+    outline: none;
+
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.search-bar button {
+    background: #2c2c2e;
+    border: none;
+    color: white;
+
+    padding: 8px 12px;
+    border-radius: 10px;
+
+    font-size: 16px;
+}
+.toast {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+.toast.show {
+    opacity: 1;
+}
+.top-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.continue-top {
+    background: #4caf50;
+    border: none;
+    color: white;
+
+    padding: 8px 12px;
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.nav-arrows {
+    position: fixed;
+
+    left: 0;
+    right: 0;
+
+    bottom: calc(env(safe-area-inset-bottom) + 110px);
+
+    display: flex;
+    justify-content: space-between;
+
+    padding: 0 18px;
+
+    z-index: 1000;
+
+    pointer-events: none;
+}
+
+.nav-arrows button {
+    pointer-events: auto;
+
+    width: 48px;
+    height: 48px;
+
+    border-radius: 14px;
+    border: 1px solid var(--border);
+
+    background: rgba(30,30,30,0.7);
+    backdrop-filter: blur(10px);
+
+    color: var(--text);
+    font-size: 22px;
+    font-weight: 600;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-arrows button:active {
+    transform: scale(0.95);
+}
+
+.ayah-info {
+    margin-top: 10px;
+    text-align: center;
+
+    font-size: 13px;
+    color: var(--muted);
+
+    background: rgba(255,255,255,0.06);
+    display: inline-block;
+
+    padding: 6px 10px;
+    border-radius: 999px;
+}
+
+
+.page {
+    padding: 20px;
+}
+
+.ayah {
+    font-size: 22px;
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+
+.ayah-actions {
+    margin-top: 10px;
+}
+
+.explain-btn {
+    display: inline-block;
+    padding: 10px 14px;
+    background: #1f6feb;
+    color: white;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.explain-btn:active {
+    transform: scale(0.97);
+}
+
+
+</style>
+
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f10">
+
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+
+    <div class="surah">
+        {{ verse.surah_name }}
+    </div>
+
+
+
+<!--
+    <div class="meta">
+        Surah {{ verse.surah }} · Ayah {{ verse.ayah }}
+    </div>
+-->
+
+    <!-- SEARCH ROW -->
+    <div class="search-bar">
+
+        <!-- SURAH -->
+
+        <select id="surahSelect" onchange="changeSurah()">
+
+            {% for num in surahs %}
+
+                <option
+                    value="{{ num }}"
+                    {% if num == verse.surah %}selected{% endif %}>
+
+                    {{ num }} — {{ surah_names[num] }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+        <!-- AYAH -->
+
+        <select id="ayahSelect" onchange="changeAyah()">
+        </select>
+
+        <div class="ayah-info">
+            Ayah {{ verse.ayah }} / <span id="totalAyahs">?</span>
+        </div>
+
+        <!-- GO -->
+
+<!--        <button onclick="goToAyah()">
+                Go
+            </button>
+-->
+        <div class="top-actions">
+
+            <button class="continue-top" onclick="goContinue()">
+                Continue
+            </button>
+            <button class="theme-btn" onclick="toggleTheme()">
+            🌓
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- PAGE -->
+<div class="page">
+
+    <div class="ayah">
+        {{ verse.text }}
+    </div>
+<!--
+    <div class="ayah-actions">
+
+        <a class="btn tafsir easyquran"
+        href="https://www.easyquran.com"
+        target="_blank">
+        🌿 Easy Quran
+        </a>
+
+    </div>
+-->
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+
+    <div class="controls">
+
+        <label class="read-box">
+            <input type="checkbox" {% if verse.is_read == 1 %}checked{% endif %} onchange="toggleRead(this)">
+            Read
+        </label>
+
+        <button class="pin" id="pinBtn" onclick="pinAyah()">📌</button>
+
+    </div>
+
+    <div class="hint">
+        Swipe up / down
+    </div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+
+/* -------------------------------- */
+/* DATA */
+/* -------------------------------- */
+
+// const pageData = {
+//     surah: '{{ verse.surah | tojson }}',
+//     ayah: '{{ verse.ayah | tojson }}',
+//     nextUrl: '{{ next_url | tojson }}',
+//     prevUrl: '{{ prev_url | tojson }}'
+// };
+
+const pageData = {
+    surah: {{ verse.surah | tojson }},
+    ayah: {{ verse.ayah | tojson }},
+    nextUrl: {{ next_url | tojson }},
+    prevUrl: {{ prev_url | tojson }}
+};
+
+/* -------------------------------- */
+/* SURAH COUNTS */
+/* -------------------------------- */
+
+//const surahCounts = JSON.parse('{{ surah_counts | tojson | safe }}');
+
+const surahCounts = {{ surah_counts | tojson }};
+
+/* -------------------------------- */
+/* BUILD AYAH DROPDOWN */
+/* -------------------------------- */
+
+function updateAyahList() {
+
+    const surah = document.getElementById("surahSelect").value;
+    const ayahSelect = document.getElementById("ayahSelect");
+
+    const max = surahCounts[surah];
+
+    ayahSelect.innerHTML = "";
+
+    for (let i = 1; i <= max; i++) {
+
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Ayah " + i;
+
+        ayahSelect.appendChild(opt);
+    }
+
+    ayahSelect.value = pageData.ayah;
+}
+
+/* -------------------------------- */
+/* CHANGE SURAH */
+/* -------------------------------- */
+
+function changeSurah() {
+    const surah = document.getElementById("surahSelect").value;
+    window.location.href = `/view/${surah}/1`;
+}
+
+function changeAyah() {
+    const surah = document.getElementById("surahSelect").value;
+    const ayah = document.getElementById("ayahSelect").value;
+    window.location.href = `/view/${surah}/${ayah}`;
+}
+
+/* -------------------------------- */
+/* GO TO AYAH */
+/* -------------------------------- */
+
+
+function goToAyah() {
+
+    const surah =
+        document.getElementById(
+            "surahSelect"
+        ).value;
+
+    const ayah =
+        document.getElementById(
+            "ayahSelect"
+        ).value;
+
+    window.location.href =
+        `/view/${surah}/${ayah}`;
+}
+
+/* -------------------------------- */
+/* READ */
+/* -------------------------------- */
+
+function toggleRead(box) {
+
+    fetch("/mark-read", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            surah: pageData.surah,
+            ayah: pageData.ayah,
+            is_read: box.checked
+        })
+    });
+
+    box.closest(".read-box").classList.toggle("checked", box.checked);
+}
+
+/* -------------------------------- */
+/* TOAST */
+/* -------------------------------- */
+
+function showToast(msg) {
+
+    const t =
+        document.getElementById("toast");
+
+    t.textContent = msg;
+
+    t.classList.add("show");
+
+    setTimeout(() => {
+        t.classList.remove("show");
+    }, 1500);
+}
+
+/* -------------------------------- */
+/* PIN */
+/* -------------------------------- */
+function pinAyah() {
+
+    const btn = document.getElementById("pinBtn");
+
+    fetch("/pin", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            surah: pageData.surah,
+            ayah: pageData.ayah
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.success) {
+
+            // turn green
+            btn.classList.add("active");
+
+            showToast(`📌 Pinned ${pageData.surah}:${pageData.ayah}`);
+        }
+    });
+
+    navigator.vibrate?.(50);
+}
+
+/* -------------------------------- */
+/* CONTINUE */
+/* -------------------------------- */
+
+function goContinue() {
+
+    window.location.href = "/continue";
+}
+
+/* -------------------------------- */
+/* NAVIGATION */
+/* -------------------------------- */
+
+function goNext() {
+    if (pageData.nextUrl && pageData.nextUrl !== "null") {
+        window.location.href = pageData.nextUrl;
+    }
+}
+
+function goPrev() {
+    if (pageData.prevUrl && pageData.prevUrl !== "null") {
+        window.location.href = pageData.prevUrl;
+    }
+}
+
+/* -------------------------------- */
+/* SWIPE */
+/* -------------------------------- */
+
+let startY = 0;
+
+document.addEventListener("touchstart", e => {
+
+    startY =
+        e.touches[0].clientY;
+});
+
+document.addEventListener("touchend", e => {
+
+    const endY =
+        e.changedTouches[0].clientY;
+
+    const diff =
+        startY - endY;
+
+    if (diff > 60) goNext();
+
+    if (diff < -60) goPrev();
+});
+
+function setTheme(mode) {
+    if (mode === "light") {
+        document.body.classList.add("light");
+    } else {
+        document.body.classList.remove("light");
+    }
+
+    localStorage.setItem("theme", mode);
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.contains("light");
+    setTheme(isLight ? "dark" : "light");
+}
+
+/* LOAD SAVED THEME */
+window.addEventListener("DOMContentLoaded", () => {
+    const saved = localStorage.getItem("theme") || "dark";
+    setTheme(saved);
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+    const total = surahCounts[pageData.surah];
+    document.getElementById("totalAyahs").textContent = total;
+});
+/* -------------------------------- */
+/* INIT */
+/* -------------------------------- */
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        updateAyahList();
+    }
+);
+
+</script>
+<div class="nav-arrows">
+    <button onclick="goPrev()">‹</button>
+    <button onclick="goNext()">›</button>
+</div>
+</body>
+</html>

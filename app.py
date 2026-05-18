@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request
-from flask import redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect
 import sqlite3
 import os
 
@@ -14,7 +13,31 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def get_surah_counts():
 
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT surah, MAX(ayah) as total
+        FROM quran
+        GROUP BY surah
+        ORDER BY surah
+    """)
+
+    rows = cur.fetchall()
+
+    conn.close()
+
+    counts = {}
+
+    for row in rows:
+        counts[row["surah"]] = row["total"]
+
+    return counts
+# -----------------------------
+# SURAH NAMES
+# -----------------------------
 SURAH_NAMES = {
     1: "Al-Fatiha",
     2: "Al-Baqarah",
@@ -131,97 +154,307 @@ SURAH_NAMES = {
     113: "Al-Falaq",
     114: "An-Nas"
 }
+SURAH_AYAH_COUNT = {
+    1: 7,
+    2: 286,
+    3: 200,
+    4: 176,
+    5: 120,
+    6: 165,
+    7: 206,
+    8: 75,
+    9: 129,
+    10: 109,
+    11: 123,
+    12: 111,
+    13: 43,
+    14: 52,
+    15: 99,
+    16: 128,
+    17: 111,
+    18: 110,
+    19: 98,
+    20: 135,
+    21: 112,
+    22: 78,
+    23: 118,
+    24: 64,
+    25: 77,
+    26: 227,
+    27: 93,
+    28: 88,
+    29: 69,
+    30: 60,
+    31: 34,
+    32: 30,
+    33: 73,
+    34: 54,
+    35: 45,
+    36: 83,
+    37: 182,
+    38: 88,
+    39: 75,
+    40: 85,
+    41: 54,
+    42: 53,
+    43: 89,
+    44: 59,
+    45: 37,
+    46: 35,
+    47: 38,
+    48: 29,
+    49: 18,
+    50: 45,
+    51: 60,
+    52: 49,
+    53: 62,
+    54: 55,
+    55: 78,
+    56: 96,
+    57: 29,
+    58: 22,
+    59: 24,
+    60: 13,
+    61: 14,
+    62: 11,
+    63: 11,
+    64: 18,
+    65: 12,
+    66: 12,
+    67: 30,
+    68: 52,
+    69: 52,
+    70: 44,
+    71: 28,
+    72: 28,
+    73: 20,
+    74: 56,
+    75: 40,
+    76: 31,
+    77: 50,
+    78: 40,
+    79: 46,
+    80: 42,
+    81: 29,
+    82: 19,
+    83: 36,
+    84: 25,
+    85: 22,
+    86: 17,
+    87: 19,
+    88: 26,
+    89: 30,
+    90: 20,
+    91: 15,
+    92: 21,
+    93: 11,
+    94: 8,
+    95: 8,
+    96: 19,
+    97: 5,
+    98: 8,
+    99: 8,
+    100: 11,
+    101: 11,
+    102: 8,
+    103: 3,
+    104: 9,
+    105: 5,
+    106: 4,
+    107: 7,
+    108: 3,
+    109: 6,
+    110: 3,
+    111: 5,
+    112: 4,
+    113: 5,
+    114: 6
+}
 
-
+# -----------------------------
+# INIT DB
+# -----------------------------
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
 
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS progress (
-        id INTEGER PRIMARY KEY,
-        surah INTEGER,
-        ayah INTEGER
-    )
+        CREATE TABLE IF NOT EXISTS progress (
+            id INTEGER PRIMARY KEY,
+            surah INTEGER,
+            ayah INTEGER
+        )
     """)
 
     conn.commit()
     conn.close()
 
+
 init_db()
 
+
+# -----------------------------
+# MAIN VIEW
+# -----------------------------
 @app.route("/")
-def index():
+def home():
+    return redirect("/view/1/1")
+
+
+# -----------------------------
+# VIEW SINGLE ayah
+# -----------------------------
+@app.route("/view/<int:surah>/<int:ayah>")
+def view_ayah(surah, ayah):
 
     conn = get_db()
     cur = conn.cursor()
 
+    # CURRENT AYAH
     cur.execute("""
-        SELECT DISTINCT surah
+        SELECT *
         FROM quran
-        ORDER BY surah
-    """)
-    surahs = [row["surah"] for row in cur.fetchall()]
+        WHERE surah = ? AND ayah = ?
+    """, (surah, ayah))
 
-    selected_surah = request.args.get("surah", type=int, default=1)
-    selected_ayah = request.args.get("ayah", type=int, default=1)
-    
-    
-    
-    
-    cur.execute("SELECT surah, ayah FROM progress WHERE id = 1")
-    progress = cur.fetchone()
+    verse = cur.fetchone()
 
-    pinned_surah = progress["surah"] if progress else None
-    pinned_ayah = progress["ayah"] if progress else None
-    
-    
-    
-    
-    
-    
-    
-    
+    if not verse:
+        return redirect("/view/1/1")
 
+    # -----------------------------
+    # NEXT AYAH (same surah first)
+    # -----------------------------
     cur.execute("""
-        SELECT rowid, surah, ayah, text, is_read, is_bookmarked
+        SELECT surah, ayah
         FROM quran
-        WHERE surah = ?
-        ORDER BY ayah
-    """, (selected_surah,))
+        WHERE (surah = ? AND ayah > ?)
+           OR (surah > ?)
+        ORDER BY surah ASC, ayah ASC
+        LIMIT 1
+    """, (surah, ayah, surah))
 
-    verses = cur.fetchall()
+    next_row = cur.fetchone()
+
+    # -----------------------------
+    # PREVIOUS AYAH
+    # -----------------------------
+    cur.execute("""
+        SELECT surah, ayah
+        FROM quran
+        WHERE (surah = ? AND ayah < ?)
+           OR (surah < ?)
+        ORDER BY surah DESC, ayah DESC
+        LIMIT 1
+    """, (surah, ayah, surah))
+
+    prev_row = cur.fetchone()
+
     conn.close()
 
-    return render_template(
-        "index.html",
-        surahs=surahs,
-        verses=verses,
-        selected_surah=selected_surah,
-        selected_ayah=selected_ayah,
-        pinned_surah=pinned_surah,
-        pinned_ayah=pinned_ayah,
-        surah_names=SURAH_NAMES
-    )
-    
+    next_url = f"/view/{next_row['surah']}/{next_row['ayah']}" if next_row else None
+    prev_url = f"/view/{prev_row['surah']}/{prev_row['ayah']}" if prev_row else None
 
-@app.route("/toggle_read/<int:rowid>")
-def toggle_read(rowid):
+    
+    return render_template(
+        "ayah.html",
+
+        verse=verse,
+
+        next_url=next_url,
+        prev_url=prev_url,
+
+        surahs=list(range(1, 115)),
+
+        surah_names=SURAH_NAMES,
+
+        surah_counts=get_surah_counts()
+    )
+
+
+# -----------------------------
+# MARK READ
+# -----------------------------
+@app.route("/mark-read", methods=["POST"])
+def mark_read():
+    data = request.get_json()
+
+    surah = data["surah"]
+    ayah = data["ayah"]
+    is_read = data["is_read"]
+
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
         UPDATE quran
-        SET is_read = CASE is_read WHEN 1 THEN 0 ELSE 1 END
-        WHERE rowid = ?
-    """, (rowid,))
+        SET is_read = ?
+        WHERE surah = ? AND ayah = ?
+    """, (1 if is_read else 0, surah, ayah))
 
     conn.commit()
     conn.close()
 
-    return redirect(request.referrer)
+    return {"status": "ok"}
 
 
+# -----------------------------
+# PIN ayah (PROGRESS)
+# -----------------------------
+@app.route("/pin", methods=["POST"])
+def pin_ayah():
+    data = request.json
+
+    surah = data["surah"]
+    ayah = data["ayah"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO progress (id, surah, ayah)
+        VALUES (1, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            surah = excluded.surah,
+            ayah = excluded.ayah
+    """, (surah, ayah))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "surah": surah,
+        "ayah": ayah
+    })
+
+
+# -----------------------------
+# CONTINUE READING
+# -----------------------------
+@app.route("/continue")
+def continue_reading():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT surah, ayah
+        FROM progress
+        WHERE id = 1
+    """)
+    row = cur.fetchone()
+
+    conn.close()
+
+    if not row:
+        return redirect("/view/1/1")
+
+    return redirect(f"/view/{row['surah']}/{row['ayah']}")
+
+
+# -----------------------------
+# BOOKMARK TOGGLE
+# -----------------------------
 @app.route("/toggle_bookmark/<int:rowid>")
 def toggle_bookmark(rowid):
     conn = get_db()
@@ -238,6 +471,10 @@ def toggle_bookmark(rowid):
 
     return redirect(request.referrer)
 
+
+# -----------------------------
+# BOOKMARKS PAGE
+# -----------------------------
 @app.route("/bookmarks")
 def bookmarks():
     conn = get_db()
@@ -256,81 +493,8 @@ def bookmarks():
     return render_template("bookmarks.html", verses=verses)
 
 
-@app.route("/mark_progress/<int:surah>/<int:ayah>")
-def mark_progress(surah, ayah):
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO progress (id, surah, ayah)
-        VALUES (1, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-            surah = excluded.surah,
-            ayah = excluded.ayah
-    """, (surah, ayah))
-
-    conn.commit()
-    conn.close()
-
-    return "", 204
-
-@app.route("/mark-read", methods=["POST"])
-def mark_read():
-    data = request.get_json()
-
-    surah = data["surah"]
-    ayah = data["ayah"]
-    is_read = data["is_read"]
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-        UPDATE quran
-        SET is_read = ?
-        WHERE surah = ? AND ayah = ?
-    """, (is_read, surah, ayah))
-
-    conn.commit()
-    conn.close()
-
-    return {"status": "ok"}
-
-
-
-@app.route("/resume")
-def resume():
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("SELECT surah, ayah FROM progress WHERE id = 1")
-    row = cur.fetchone()
-
-    conn.close()
-
-    # fallback if nothing saved yet
-    if not row:
-        return redirect("/")
-
-    return redirect(f"/?surah={row['surah']}&ayah={row['ayah']}")
-
-@app.route("/clear_progress", methods=["POST"])
-def clear_progress():
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("""
-        UPDATE progress
-        SET surah = 1,
-            ayah = 1
-        WHERE id = 1
-    """)
-
-    conn.commit()
-    conn.close()
-
-    return "", 204
-    
-    
+# -----------------------------
+# RUN APP
+# -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
