@@ -57,11 +57,16 @@ body {
 /* -------------------------------- */
 
 .topbar {
-    position: relative;
-    flex: 0 0 auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     background: var(--bg);
     color: var(--text);
+
     z-index: 9999;
+
+    height: 110px;
 }
 
 .footer {
@@ -93,6 +98,19 @@ body {
     position: fixed;
     top: 0;
     bottom: 100px; /* footer height */
+    left: 0;
+    right: 0;
+
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    padding: 20px;
+    box-sizing: border-box;
+}
+.page {
+    position: fixed;
+    top: 110px;   /* MUST match topbar height */
+    bottom: 100px;
     left: 0;
     right: 0;
 
