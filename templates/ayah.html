@@ -727,30 +727,7 @@ function goPrev() {
 /* SWIPE */
 /* -------------------------------- */
 
-let startY = 0;
-
-document.addEventListener("touchstart", e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-}, { passive: true });
-
-document.addEventListener("touchend", e => {
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-
-    const dx = endX - startX;
-    const dy = endY - startY;
-
-    // 🚨 IMPORTANT: ignore UP/DOWN swipes completely
-    if (Math.abs(dy) > Math.abs(dx)) return;
-
-    // only LEFT/RIGHT changes ayah
-    if (dx < -60) goNext();
-    if (dx > 60) goPrev();
-});
-
-
-
+const page = document.querySelector(".page");
 
 
 const ayah = document.getElementById("ayahText");
@@ -841,27 +818,28 @@ document.addEventListener('touchmove', function (e) {
     e.preventDefault();
 }, { passive: false });
 
+
 let startX = 0;
+let startY = 0;
 
-
-document.addEventListener("touchstart", e => {
+page.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
 }, { passive: true });
 
-document.addEventListener("touchend", e => {
+page.addEventListener("touchend", (e) => {
     const endX = e.changedTouches[0].clientX;
     const endY = e.changedTouches[0].clientY;
 
     const dx = endX - startX;
     const dy = endY - startY;
 
-    // IMPORTANT: ignore vertical swipes
+    // ignore vertical scroll gestures
     if (Math.abs(dy) > Math.abs(dx)) return;
 
-    if (dx < -60) goNext(); // swipe left
-    if (dx > 60) goPrev();  // swipe right
-});
+    if (dx < -60) goNext();
+    if (dx > 60) goPrev();
+}, { passive: true });
 
 
 /* -------------------------------- */
