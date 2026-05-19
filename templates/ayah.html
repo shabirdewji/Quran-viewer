@@ -16,6 +16,8 @@
     --accent: #4caf50;
 
     --card: #1c1c1e;
+    --topbar-height: 110px;
+    --footer-height: 100px;
 }
 
 /* LIGHT THEME */
@@ -38,6 +40,7 @@ html {
 }
 html, body {
     height: 100%;
+    margin: 0;
     overflow: hidden;
 }
 
@@ -53,6 +56,8 @@ body {
     touch-action: pan-x;
     background: var(--bg);
     color: var(--text);
+    display: flex;
+    flex-direction: column;
 }
 
 /* -------------------------------- */
@@ -95,21 +100,17 @@ body {
 /* -------------------------------- */
 
 .page {
-    position: absolute;
-    top: 0;
+    position: fixed;
+    top: var(--topbar-height);
+    bottom: var(--footer-height);
     left: 0;
     right: 0;
-    bottom: 0;
-
-    padding-top: 120px;
-    padding-bottom: 140px;
 
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 
-    box-sizing: border-box;
 
-    /* IMPORTANT FIX */
+    box-sizing: border-box;
     display: block;
 }
 
@@ -120,18 +121,10 @@ body {
     font-size: 32px;
     line-height: 1.9;
     text-align: center;
-
     max-width: 700px;
     margin: 0 auto;
-
-    padding: 20px;
-    box-sizing: border-box;
+    padding-top: 0; 
 }
-
-
-
-
-
 /* -------------------------------- */
 /* FOOTER */
 /* -------------------------------- */
