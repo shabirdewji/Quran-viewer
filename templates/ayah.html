@@ -38,6 +38,7 @@ body.light {
 html {
     -webkit-text-size-adjust: 100%;
 }
+
 html, body {
     height: 100%;
     margin: 0;
@@ -63,9 +64,7 @@ body {
     right: 0;
     background: var(--bg);
     color: var(--text);
-
     z-index: 9999;
-
     height: 110px;
 }
 
@@ -74,6 +73,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
+    height: 100px;
     z-index: 1000;
     background: var(--bg);
     color: var(--text);
@@ -96,7 +96,7 @@ body {
 
 .page {
     position: fixed;
-    top: 0;
+    top: 110px;
     bottom: 100px; /* footer height */
     left: 0;
     right: 0;
@@ -106,20 +106,9 @@ body {
 
     padding: 20px;
     box-sizing: border-box;
+    touch-action: pan-y;
 }
-.page {
-    position: fixed;
-    top: 110px;   /* MUST match topbar height */
-    bottom: 100px;
-    left: 0;
-    right: 0;
 
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-
-    padding: 20px;
-    box-sizing: border-box;
-}
 /* -------------------------------- */
 /* AYAH TEXT */
 /* -------------------------------- */
