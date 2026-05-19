@@ -398,6 +398,18 @@ body {
 }
 
 
+.audio-btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 12px;
+    background: #16a34a;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    margin-top: 12px;
+}
+
+
 </style>
 
 
@@ -490,6 +502,12 @@ body {
 <div class="ayah" id="ayahText">
     {{ verse.text }}
 </div>
+        <!-- Audio -->
+        <button class="audio-btn"
+                onclick="playAudio('{{ '%03d' % verse.surah }}{{ '%03d' % verse.ayah }}')">
+            🔊 Play Audio
+        </button>
+        <audio id="audioPlayer"></audio>
 
 <!--
     <div class="ayah-actions">
@@ -774,6 +792,20 @@ function toggleTheme() {
     const isLight = document.body.classList.contains("light");
     setTheme(isLight ? "dark" : "light");
 }
+
+function playAudio(audioId) {
+
+    const player = document.getElementById("audioPlayer");
+
+    const url =
+        "https://everyayah.com/data/Alafasy_128kbps/" +
+        audioId +
+        ".mp3";
+
+    player.src = url;
+    player.play();
+}
+
 
 /* LOAD SAVED THEME */
 window.addEventListener("DOMContentLoaded", () => {
