@@ -44,30 +44,33 @@ html, body {
     overflow: hidden;
 }
 
-
 body {
-    margin: 0;
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    overflow: hidden;
-
-    overscroll-behavior: none;
-
-    /* KEY: allow horizontal swipe only */
-    touch-action: pan-x;
     background: var(--bg);
     color: var(--text);
-    display: flex;
-    flex-direction: column; 
-    height: 100%;
 }
 
 /* -------------------------------- */
 /* TOP BAR */
 /* -------------------------------- */
 
-.topbar, .footer {
+.topbar {
     position: relative;
     flex: 0 0 auto;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--bg);
+    color: var(--text);
 }
 
 .surah {
@@ -89,6 +92,9 @@ body {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 /* -------------------------------- */
@@ -364,6 +370,10 @@ body {
 
 
 .audio-icon {
+    position: relative;
+    z-index: 9999;
+    pointer-events: auto;
+
     background: transparent;
     border: none;
     padding: 6px;
@@ -492,13 +502,13 @@ body {
             <input type="checkbox" {% if verse.is_read == 1 %}checked{% endif %} onchange="toggleRead(this)">
             Read
         </label>
-            <div class="font-controls">
-    <button onclick="changeFontSize(-5)">A−</button>
-    <button onclick="changeFontSize(5)">A+</button>
-    </div>
-            <button class="theme-btn" onclick="toggleTheme()">
+    <div class="font-controls">
+        <button onclick="changeFontSize(-5)">A−</button>
+        <button onclick="changeFontSize(5)">A+</button>
+    
+        <button class="theme-btn" onclick="toggleTheme()">
             🌓
-            </button>
+        </button>
 
         <!-- Audio -->
         {% set audio_id = "%03d%03d" | format(verse.surah, verse.ayah) %}
@@ -516,7 +526,9 @@ body {
         Swipe up / down
     </div>
 
+    </div>
 </div>
+
 <div id="toast" class="toast"></div>
 <script>
 
@@ -782,7 +794,7 @@ window.onload = function () {
 
 
 
-function playAudio(audioId) {
+async function playAudio(audioId) {
 
     const player = document.getElementById("audioPlayer");
 
@@ -791,8 +803,16 @@ function playAudio(audioId) {
         audioId +
         ".mp3";
 
-    player.src = url;
-    player.play();
+    try {
+        player.pause();
+        player.src = url;
+        player.load();
+
+        await player.play();
+
+    } catch (err) {
+        console.log("Audio play failed:", err);
+    }
 }
 
 
@@ -851,5 +871,6 @@ window.addEventListener(
     <button onclick="goPrev()">‹</button>
     <button onclick="goNext()">›</button>
 </div>
+<audio id="audioPlayer"></audio>
 </body>
 </html>
