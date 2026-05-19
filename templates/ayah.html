@@ -61,6 +61,7 @@ body {
     flex: 0 0 auto;
     background: var(--bg);
     color: var(--text);
+    z-index: 9999;
 }
 
 .footer {
@@ -89,14 +90,18 @@ body {
 /* -------------------------------- */
 
 .page {
-    flex: 1;
+    position: fixed;
+    top: 0;
+    bottom: 100px; /* footer height */
+    left: 0;
+    right: 0;
+
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 
     padding: 20px;
     box-sizing: border-box;
 }
-
 /* -------------------------------- */
 /* AYAH TEXT */
 /* -------------------------------- */
@@ -395,7 +400,8 @@ body {
 </style>
 
 
-<meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f0f10">
 
