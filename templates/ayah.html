@@ -80,6 +80,20 @@ body {
     color: var(--text);
 }
 
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    height: auto;
+    min-height: 160px;
+
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--bg);
+    z-index: 1000;
+}
+
 .surah {
     font-size: 20px;
     font-weight: 600;
@@ -128,6 +142,30 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 6px 10px;
+}
+
+.font-controls.primary-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.action-controls {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+    padding: 6px 10px;
+    border-top: 1px solid var(--border);
+}
+
+.action-controls button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #2c2c2e;
+    color: white;
+    font-size: 14px;
 }
 
 .read-box {
@@ -398,6 +436,24 @@ body {
     opacity: 1;
 }
 
+.row1,
+.row2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.row2 button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #2c2c2e;
+    color: white;
+    font-size: 14px;
+}
+
 </style>
 
 
@@ -506,40 +562,30 @@ body {
 
     <div class="controls">
 
-        <label class="read-box">
-            <input type="checkbox" {% if verse.is_read == 1 %}checked{% endif %} onchange="toggleRead(this)">
-            Read
-        </label>
-    <div class="font-controls">
-        <button onclick="changeFontSize(-5)">A−</button>
-        <button onclick="changeFontSize(5)">A+</button>
-    
-        <button class="theme-btn" onclick="toggleTheme()">
-            🌓
-        </button>
+        <!-- ROW 1 -->
+        <div class="row1">
+            <label class="read-box">
+                <input type="checkbox" onchange="toggleRead(this)">
+                Read
+            </label>
 
-        <!-- Audio -->
-        {% set audio_id = "%03d%03d" | format(verse.surah, verse.ayah) %}
+            <div class="font-controls">
+                <button onclick="changeFontSize(-5)">A−</button>
+                <button onclick="changeFontSize(5)">A+</button>
+                <button onclick="toggleTheme()">🌓</button>
+                <button onclick="playAudio(audioId)">🔊</button>
+            </div>
+        </div>
 
-        <button class="audio-icon"
-                onclick="playAudio('{{ audio_id }}')">
-            🔊
-        </button>
-
-
-        <button class="pin" onclick="pinAyah()">📌</button>
-        <button onclick="addBookmark()">🔖 Bookmark</button>
-
-        <button onclick="toggleBookmarks()">📚 Bookmarks</button>
-        
+        <!-- ROW 2 -->
+        <div class="row2">
+            <button class="pin" onclick="pinAyah()">📌 Pin</button>
+            <button onclick="addBookmark()">🔖 Bookmark</button>
+            <button onclick="toggleBookmarks()">📚 Bookmarks</button>
+        </div>
 
     </div>
 
-    <div class="hint">
-        Swipe up / down
-    </div>
-
-    </div>
 </div>
 
 <div id="toast" class="toast"></div>
