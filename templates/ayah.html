@@ -351,11 +351,32 @@ body {
     padding: 20px;
 }
 
-.ayah {
-    font-size: 22px;
-    line-height: 1.8;
-    margin-bottom: 16px;
+
+.font-controls {
+    display: flex;
+    gap: 10px;
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    background: #111;
+    z-index: 100;
 }
+
+.font-controls button {
+    padding: 10px 16px;
+    font-size: 18px;
+    border: none;
+    border-radius: 12px;
+    background: #222;
+    color: white;
+}
+
+.ayah {
+    font-size: 32px;
+    line-height: 1.9;
+    padding: 20px;
+}
+
 
 .ayah-actions {
     margin-top: 10px;
@@ -444,9 +465,7 @@ body {
             <button class="continue-top" onclick="goContinue()">
                 Continue
             </button>
-            <button class="theme-btn" onclick="toggleTheme()">
-            🌓
-            </button>
+
 
         </div>
 
@@ -457,11 +476,21 @@ body {
 
 
 <!-- PAGE -->
+ 
 <div class="page">
 
-    <div class="ayah">
-        {{ verse.text }}
-    </div>
+    <div class="font-controls">
+    <button onclick="changeFontSize(-5)">A−</button>
+    <button onclick="changeFontSize(5)">A+</button>
+</div>
+            <button class="theme-btn" onclick="toggleTheme()">
+            🌓
+            </button>
+
+<div class="ayah" id="ayahText">
+    {{ verse.text }}
+</div>
+
 <!--
     <div class="ayah-actions">
 
@@ -712,6 +741,34 @@ function setTheme(mode) {
 
     localStorage.setItem("theme", mode);
 }
+
+
+const ayah = document.getElementById("ayahText");
+
+// load saved size
+let currentSize = localStorage.getItem("fontSize");
+
+if (!currentSize) {
+    currentSize = 32;
+}
+
+currentSize = parseInt(currentSize);
+
+ayah.style.fontSize = currentSize + "px";
+
+function changeFontSize(amount) {
+
+    currentSize += amount;
+
+    // limits
+    if (currentSize < 18) currentSize = 18;
+    if (currentSize > 60) currentSize = 60;
+
+    ayah.style.fontSize = currentSize + "px";
+
+    localStorage.setItem("fontSize", currentSize);
+}
+
 
 function toggleTheme() {
     const isLight = document.body.classList.contains("light");
