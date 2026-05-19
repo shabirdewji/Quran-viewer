@@ -57,31 +57,17 @@ body {
     background: var(--bg);
     color: var(--text);
     display: flex;
-    flex-direction: column;
+    flex-direction: column; 
+    height: 100%;
 }
 
 /* -------------------------------- */
 /* TOP BAR */
 /* -------------------------------- */
 
-.topbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-
-    z-index: 1000;
-
-    padding:
-        calc(env(safe-area-inset-top) + 10px)
-        18px
-        12px
-        18px;
-
-    background: rgba(15,15,16,0.92);
-    backdrop-filter: blur(16px);
-
-    border-bottom: 1px solid var(--border);
+.topbar, .footer {
+    position: relative;
+    flex: 0 0 auto;
 }
 
 .surah {
@@ -100,18 +86,9 @@ body {
 /* -------------------------------- */
 
 .page {
-    position: fixed;
-    top: var(--topbar-height);
-    bottom: var(--footer-height);
-    left: 0;
-    right: 0;
-
+    flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-
-
-    box-sizing: border-box;
-    display: block;
 }
 
 /* -------------------------------- */
@@ -129,22 +106,7 @@ body {
 /* FOOTER */
 /* -------------------------------- */
 
-.footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
 
-    background: rgba(15,15,16,0.95);
-    backdrop-filter: blur(14px);
-
-    border-top: 1px solid var(--border);
-
-    padding:
-        12px 18px
-        calc(env(safe-area-inset-bottom) + 14px)
-        18px;
-}
 
 /* -------------------------------- */
 /* CONTROLS */
