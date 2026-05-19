@@ -8,9 +8,23 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, "quran.db")
 
 
+import sqlite3
+
 def get_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(
+        "quran.db",
+        timeout=30,
+        check_same_thread=False
+    )
+
     conn.row_factory = sqlite3.Row
+
+    # WAL mode (good for concurrent reads/writes)
+    conn.execute("PRAGMA journal_mode=WAL")
+
+    # IMPORTANT: wait instead of failing immediately
+    conn.execute("PRAGMA busy_timeout = 30000")
+
     return conn
 
 def get_surah_counts():
@@ -298,6 +312,22 @@ init_db()
 # -----------------------------
 @app.route("/")
 def home():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT surah, ayah
+        FROM progress
+        WHERE id = 1
+    """)
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return redirect(f"/view/{row['surah']}/{row['ayah']}")
+
     return redirect("/view/1/1")
 
 
@@ -402,8 +432,8 @@ def mark_read():
 # PIN ayah (PROGRESS)
 # -----------------------------
 @app.route("/pin", methods=["POST"])
-def pin_ayah():
-    data = request.json
+def pin():
+    data = request.get_json()
 
     surah = data["surah"]
     ayah = data["ayah"]
@@ -412,28 +442,24 @@ def pin_ayah():
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO progress (id, surah, ayah)
+        INSERT INTO pins (id, surah, ayah)
         VALUES (1, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-            surah = excluded.surah,
-            ayah = excluded.ayah
+        ON CONFLICT(id)
+        DO UPDATE SET surah=excluded.surah, ayah=excluded.ayah
     """, (surah, ayah))
 
     conn.commit()
     conn.close()
 
-    return jsonify({
-        "success": True,
-        "surah": surah,
-        "ayah": ayah
-    })
+    return {"success": True}
 
 
-# -----------------------------
-# CONTINUE READING
-# -----------------------------
+# --------------------------------
+# CONTINUE
+# --------------------------------
 @app.route("/continue")
 def continue_reading():
+
     conn = get_db()
     cur = conn.cursor()
 
@@ -442,16 +468,14 @@ def continue_reading():
         FROM progress
         WHERE id = 1
     """)
-    row = cur.fetchone()
 
+    row = cur.fetchone()
     conn.close()
 
     if not row:
         return redirect("/view/1/1")
 
     return redirect(f"/view/{row['surah']}/{row['ayah']}")
-
-
 # -----------------------------
 # BOOKMARK TOGGLE
 # -----------------------------
@@ -475,24 +499,80 @@ def toggle_bookmark(rowid):
 # -----------------------------
 # BOOKMARKS PAGE
 # -----------------------------
-@app.route("/bookmarks")
-def bookmarks():
+@app.route("/bookmark", methods=["POST"])
+def add_bookmark():
+
+    data = request.json
+
+    surah = data["surah"]
+    ayah = data["ayah"]
+    label = data.get("label")
+
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT rowid, surah, ayah, text
-        FROM quran
-        WHERE is_bookmarked = 1
-        ORDER BY surah, ayah
-    """)
+        INSERT INTO bookmarks (surah, ayah, label)
+        VALUES (?, ?, ?)
+    """, (surah, ayah, label))
 
-    verses = cur.fetchall()
+    conn.commit()
     conn.close()
 
-    return render_template("bookmarks.html", verses=verses)
+    return {"ok": True}
 
+@app.route("/bookmarks")
+def get_bookmarks():
+    conn = get_db()
+    cur = conn.cursor()
 
+    cur.execute("SELECT id, surah, ayah, label FROM bookmarks ORDER BY id DESC")
+    rows = cur.fetchall()
+    conn.close()
+
+    return {
+        "bookmarks": [
+            {"id": r["id"], "surah": r["surah"], "ayah": r["ayah"], "label": r["label"]}
+            for r in rows
+        ]
+    }
+
+@app.route("/bookmark/<int:bid>", methods=["DELETE"])
+def delete_bookmark(bid):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM bookmarks WHERE id = ?", (bid,))
+
+    conn.commit()
+    conn.close()
+
+    return {"ok": True}
+
+@app.route("/save_progress", methods=["POST"])
+def save_progress():
+    
+    data = request.json
+    surah = data["surah"]
+    ayah = data["ayah"]
+    print("SAVE_PROGRESS HIT:", data)
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO progress (id, surah, ayah)
+        VALUES (1, ?, ?)
+        ON CONFLICT(id)
+        DO UPDATE SET
+            surah = excluded.surah,
+            ayah = excluded.ayah
+    """, (surah, ayah))
+
+    conn.commit()
+    conn.close()
+
+    return {"ok": True}
 # -----------------------------
 # RUN APP
 # -----------------------------

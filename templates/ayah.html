@@ -419,6 +419,7 @@ body {
 
 
 
+
 <!--
     <div class="meta">
         Surah {{ verse.surah }} · Ayah {{ verse.ayah }}
@@ -525,7 +526,12 @@ body {
             🔊
         </button>
 
-        <button class="pin" id="pinBtn" onclick="pinAyah()">📌</button>
+
+        <button class="pin" onclick="pinAyah()">📌</button>
+        <button onclick="addBookmark()">🔖 Bookmark</button>
+
+        <button onclick="toggleBookmarks()">📚 Bookmarks</button>
+        
 
     </div>
 
@@ -626,23 +632,24 @@ function goToAyah() {
         `/view/${surah}/${ayah}`;
 }
 
+function goTo(surah, ayah) {
+    window.location.href = `/view/${surah}/${ayah}`;
+}
 /* -------------------------------- */
 /* READ */
 /* -------------------------------- */
 
-function toggleRead(box) {
+function toggleBookmarks() {
+    const panel = document.getElementById("bookmarkPanel");
 
-    fetch("/mark-read", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            surah: pageData.surah,
-            ayah: pageData.ayah,
-            is_read: box.checked
-        })
-    });
+    const isHidden = panel.style.display === "none" || panel.style.display === "";
 
-    box.closest(".read-box").classList.toggle("checked", box.checked);
+    if (isHidden) {
+        panel.style.display = "block";
+        loadBookmarks();
+    } else {
+        panel.style.display = "none";
+    }
 }
 
 /* -------------------------------- */
@@ -667,33 +674,24 @@ function showToast(msg) {
 /* PIN */
 /* -------------------------------- */
 function pinAyah() {
-
-    const btn = document.getElementById("pinBtn");
+    console.log("📌 pinAyah fired");
 
     fetch("/pin", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             surah: pageData.surah,
             ayah: pageData.ayah
         })
     })
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
-
-        if (data.success) {
-
-            // turn green
-            btn.classList.add("active");
-
-            showToast(`📌 Pinned ${pageData.surah}:${pageData.ayah}`);
-        }
-    });
-
-    navigator.vibrate?.(50);
+        console.log("Pinned:", data);
+        showToast(`📌 Pinned ${pageData.surah}:${pageData.ayah}`);
+    })
+    .catch(err => console.error("Pin failed:", err));
 }
+
 
 /* -------------------------------- */
 /* CONTINUE */
@@ -800,6 +798,75 @@ async function playAudio(audioId) {
 }
 
 
+
+function loadBookmarks() {
+
+    fetch("/bookmarks")
+        .then(res => res.json())
+        .then(data => {
+
+            const box = document.getElementById("bookmarkList");
+            box.innerHTML = "";
+
+            const list = data.bookmarks || [];
+
+            if (list.length === 0) {
+                box.innerHTML = "<p>No bookmarks yet</p>";
+                return;
+            }
+
+            list.forEach(b => {
+
+                const div = document.createElement("div");
+                div.style.padding = "10px";
+                div.style.borderBottom = "1px solid #333";
+
+                div.innerHTML =
+                    `<div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+                        <div style="flex:1;">
+                            📌 ${b.label ? b.label : `Surah ${b.surah}:${b.ayah}`}
+                            <span style="opacity:0.6;font-size:12px;margin-left:6px;">
+                                (${b.surah}:${b.ayah})
+                            </span>
+                        </div>
+
+                        <button onclick="goToBookmark(${b.surah}, ${b.ayah})">Go</button>
+                        <button onclick="deleteBookmark(${b.id})">Del</button>
+                    </div>`;
+
+                box.appendChild(div);
+            });
+        });
+}
+
+function goToBookmark(surah, ayah) {
+    window.location.href = `/view/${surah}/${ayah}`;
+}
+
+
+
+
+function toggleBookmarks() {
+    const panel = document.getElementById("bookmarkPanel");
+
+    const isOpen = panel.style.display === "block";
+    panel.style.display = isOpen ? "none" : "block";
+
+    if (!isOpen) loadBookmarks();
+}
+
+function deleteBookmark(id) {
+
+    fetch(`/bookmark/${id}`, {
+        method: "DELETE"
+    })
+    .then(res => res.json())
+    .then(() => {
+        loadBookmarks(); // refresh panel
+    })
+    .catch(err => console.error("Delete failed:", err));
+}
+
 /* LOAD SAVED THEME */
 window.addEventListener("DOMContentLoaded", () => {
     const saved = localStorage.getItem("theme") || "dark";
@@ -853,10 +920,41 @@ page.addEventListener("touchend", (e) => {
 
 }, { passive: true });
 
+/* -------------------------------- */
+/* AUTO SAVE LAST VIEWED */
+/* -------------------------------- */
+
+function sendProgress() {
+
+    const surah = document.getElementById("surahSelect");
+    const ayah = document.getElementById("ayahSelect");
+
+    if (!surah || !ayah) return;
+
+    fetch("/save_progress", {   // ✅ FIXED HERE
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            surah: surah.value,
+            ayah: ayah.value
+        })
+    });
+}
+
+
+
 
 /* -------------------------------- */
 /* INIT */
 /* -------------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+
+    const surah = document.getElementById("surahSelect");
+    const ayah = document.getElementById("ayahSelect");
+
+    if (surah) surah.addEventListener("change", sendProgress);
+    if (ayah) ayah.addEventListener("change", sendProgress);
+});
 
 window.addEventListener(
     "DOMContentLoaded",
@@ -866,11 +964,58 @@ window.addEventListener(
     }
 );
 
+window.addBookmark = function () {
+
+    console.log("ADD BOOKMARK CLICKED");
+
+    const label = prompt("Name this bookmark (optional):");
+
+    fetch("/bookmark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            surah: pageData.surah,
+            ayah: pageData.ayah,
+            label: label || ""
+        })
+    })
+    .then(r => r.json())
+    .then(() => {
+    loadBookmarks();
+
+    const panel = document.getElementById("bookmarkPanel");
+    if (panel) panel.style.display = "block";
+})
+    .catch(err => console.error(err));
+};
+
 </script>
 <div class="nav-arrows">
     <button onclick="goPrev()">‹</button>
     <button onclick="goNext()">›</button>
 </div>
 <audio id="audioPlayer"></audio>
+
+
+
+
+<div id="bookmarkPanel" style="
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    background: #111;
+    color: white;
+    padding: 12px;
+    overflow-y: auto;
+    display: none;
+    z-index: 9999;
+">
+    <h3>📚 Bookmarks</h3>
+    <div id="bookmarkList"></div>
+</div>
+
+
 </body>
 </html>
