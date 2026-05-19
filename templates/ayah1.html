@@ -40,15 +40,15 @@ html {
 }
 
 html, body {
+    height: 100%;
     margin: 0;
-    min-height: 100dvh;
+    overflow: hidden;
 }
 
 body {
     height: 100%;
     margin: 0;
     overflow: hidden;
-    overscroll-behavior-y: none;
     background: var(--bg);
     color: var(--text);
 }
@@ -96,18 +96,21 @@ body {
 /* -------------------------------- */
 
 .page {
-
     position: fixed;
     top: 110px;
-    bottom: 100px;
+    bottom: 100px; /* footer height */
     left: 0;
     right: 0;
-    overflow-y: scroll;
+
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+
     padding: 20px;
     box-sizing: border-box;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
 }
+
 /* -------------------------------- */
 /* AYAH TEXT */
 /* -------------------------------- */
@@ -811,46 +814,31 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("totalAyahs").textContent = total;
 });
 
+document.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+}, { passive: false });
 
 
 let startX = 0;
 let startY = 0;
 
 page.addEventListener("touchstart", (e) => {
-
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-
 }, { passive: true });
 
 page.addEventListener("touchend", (e) => {
-
     const endX = e.changedTouches[0].clientX;
     const endY = e.changedTouches[0].clientY;
 
     const dx = endX - startX;
     const dy = endY - startY;
 
-    // REQUIRE HORIZONTAL SWIPE
+    // ignore vertical scroll gestures
+    if (Math.abs(dy) > Math.abs(dx)) return;
 
-    if (Math.abs(dx) < 70) return;
-
-    // IGNORE MOSTLY VERTICAL MOVEMENT
-
-    if (Math.abs(dy) > 80) return;
-
-    // LEFT
-
-    if (dx < 0) {
-        goNext();
-    }
-
-    // RIGHT
-
-    if (dx > 0) {
-        goPrev();
-    }
-
+    if (dx < -60) goNext();
+    if (dx > 60) goPrev();
 }, { passive: true });
 
 
