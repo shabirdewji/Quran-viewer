@@ -46,14 +46,12 @@ html, body {
 }
 
 body {
-    display: block;
-    flex-direction: column;
     height: 100%;
+    margin: 0;
+    overflow: hidden;
     background: var(--bg);
     color: var(--text);
-    overscroll-behavior: contain;
 }
-
 /* -------------------------------- */
 /* TOP BAR */
 /* -------------------------------- */
@@ -68,7 +66,9 @@ body {
     z-index: 9999;
     height: 110px;
 }
-
+/* -------------------------------- */
+/* FOOTER */
+/* -------------------------------- */
 .footer {
     position: fixed;
     bottom: 0;
@@ -122,11 +122,6 @@ body {
     margin: 0 auto;
     padding-top: 0; 
 }
-/* -------------------------------- */
-/* FOOTER */
-/* -------------------------------- */
-
-
 
 /* -------------------------------- */
 /* CONTROLS */
