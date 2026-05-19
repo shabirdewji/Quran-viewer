@@ -753,23 +753,25 @@ function goPrev() {
 let startY = 0;
 
 document.addEventListener("touchstart", e => {
-
-    startY =
-        e.touches[0].clientY;
-});
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+}, { passive: true });
 
 document.addEventListener("touchend", e => {
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
 
-    const endY =
-        e.changedTouches[0].clientY;
+    const dx = endX - startX;
+    const dy = endY - startY;
 
-    const diff =
-        startY - endY;
+    // 🚨 IMPORTANT: ignore UP/DOWN swipes completely
+    if (Math.abs(dy) > Math.abs(dx)) return;
 
-    if (diff > 60) goNext();
-
-    if (diff < -60) goPrev();
+    // only LEFT/RIGHT changes ayah
+    if (dx < -60) goNext();
+    if (dx > 60) goPrev();
 });
+
 
 
 
