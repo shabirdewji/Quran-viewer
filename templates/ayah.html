@@ -46,11 +46,12 @@ html, body {
 }
 
 body {
-    display: flex;
+    display: block;
     flex-direction: column;
     height: 100%;
     background: var(--bg);
     color: var(--text);
+    overscroll-behavior: contain;
 }
 
 /* -------------------------------- */
@@ -107,6 +108,7 @@ body {
     padding: 20px;
     box-sizing: border-box;
     touch-action: pan-y;
+    overscroll-behavior: contain;
 }
 
 /* -------------------------------- */
