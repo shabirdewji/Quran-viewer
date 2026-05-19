@@ -95,38 +95,42 @@ body {
 /* -------------------------------- */
 
 .page {
-    height: 100vh;
-    height: 100dvh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding-top: 120px;
+    padding-bottom: 140px;
 
-    padding:
-        110px 22px
-        calc(120px + env(safe-area-inset-bottom))
-        22px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 
     box-sizing: border-box;
-    background: var(--bg);
-    color: var(--text);
+
+    /* IMPORTANT FIX */
+    display: block;
 }
 
 /* -------------------------------- */
 /* AYAH TEXT */
 /* -------------------------------- */
-
 .ayah {
-    font-size: 34px;
+    font-size: 32px;
     line-height: 1.9;
     text-align: center;
-    font-weight: 500;
 
     max-width: 700px;
     margin: 0 auto;
-    color: var(--text);
-    letter-spacing: 0.2px;
+
+    padding: 20px;
+    box-sizing: border-box;
 }
+
+
+
+
 
 /* -------------------------------- */
 /* FOOTER */
@@ -542,11 +546,12 @@ body {
             </button>
 
         <!-- Audio -->
-        <button class="audio-btn"
-                onclick="playAudio('{{ '%03d' % verse.surah }}{{ '%03d' % verse.ayah }}')">
+        {% set audio_id = "%03d%03d" | format(verse.surah, verse.ayah) %}
+
+        <button class="audio-icon"
+                onclick="playAudio('{{ audio_id }}')">
             🔊
         </button>
-        <audio id="audioPlayer"></audio>
 
         <button class="pin" id="pinBtn" onclick="pinAyah()">📌</button>
 
