@@ -491,23 +491,12 @@ body {
  
 <div class="page">
 
-    <div class="font-controls">
-    <button onclick="changeFontSize(-5)">A−</button>
-    <button onclick="changeFontSize(5)">A+</button>
-</div>
-            <button class="theme-btn" onclick="toggleTheme()">
-            🌓
-            </button>
 
-<div class="ayah" id="ayahText">
+
+    <div class="ayah" id="ayahText">
     {{ verse.text }}
-</div>
-        <!-- Audio -->
-        <button class="audio-btn"
-                onclick="playAudio('{{ '%03d' % verse.surah }}{{ '%03d' % verse.ayah }}')">
-            🔊 Play Audio
-        </button>
-        <audio id="audioPlayer"></audio>
+    </div>
+
 
 <!--
     <div class="ayah-actions">
@@ -531,6 +520,20 @@ body {
             <input type="checkbox" {% if verse.is_read == 1 %}checked{% endif %} onchange="toggleRead(this)">
             Read
         </label>
+            <div class="font-controls">
+    <button onclick="changeFontSize(-5)">A−</button>
+    <button onclick="changeFontSize(5)">A+</button>
+    </div>
+            <button class="theme-btn" onclick="toggleTheme()">
+            🌓
+            </button>
+
+        <!-- Audio -->
+        <button class="audio-btn"
+                onclick="playAudio('{{ '%03d' % verse.surah }}{{ '%03d' % verse.ayah }}')">
+            🔊 Play Audio
+        </button>
+        <audio id="audioPlayer"></audio>
 
         <button class="pin" id="pinBtn" onclick="pinAyah()">📌</button>
 
