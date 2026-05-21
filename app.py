@@ -382,7 +382,7 @@ def continue_reading():
 
     cur.execute("""
         SELECT surah, ayah
-        FROM progress
+        FROM pins
         WHERE id = 1
     """)
 

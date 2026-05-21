@@ -488,6 +488,52 @@ function sendProgress() {
         })
     });
 }
+/* -------------------------------- */
+/*    TOAST                         */
+/* -------------------------------- */
+function showToast(msg) {
+
+    const t =
+        document.getElementById("toast");
+
+    t.textContent = msg;
+
+    t.classList.add("show");
+
+    setTimeout(() => {
+        t.classList.remove("show");
+    }, 1500);
+}
+/* -------------------------------- */
+/* PIN */
+/* -------------------------------- */
+function pinAyah() {
+    console.log("📌 pinAyah fired");
+
+    fetch("/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            surah: pageData.surah,
+            ayah: pageData.ayah
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        console.log("Pinned:", data);
+        showToast(`📌 Pinned ${pageData.surah}:${pageData.ayah}`);
+    })
+    .catch(err => console.error("Pin failed:", err));
+}
+
+/* -------------------------------- */
+/* CONTINUE */
+/* -------------------------------- */
+
+function goContinue() {
+
+    window.location.href = "/continue";
+}
 
 /* -------------------------------- */
 /* INIT                             */
