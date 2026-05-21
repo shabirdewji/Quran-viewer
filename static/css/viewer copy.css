@@ -28,6 +28,12 @@ body.light {
 html {
     -webkit-text-size-adjust: 100%;
 }
+/*
+html, body {
+    margin: 0;
+    min-height: 100dvh;
+}
+    */
 
 html, body {
     height: 100%;
@@ -95,21 +101,12 @@ html, body {
 }
 
 /* RIGHT SIDE */
-/*
 .main {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
     padding-left: 90px;
-}
-*/
-
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
 }
 
 /* TOP BAR */
@@ -258,8 +255,7 @@ html, body {
     }
 
     .verse-container {
-        padding-left: 70px;
-        padding-right: 10px;
+        padding-left: 60px;
     }
 }
 
