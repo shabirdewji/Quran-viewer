@@ -269,20 +269,36 @@ def view_ayah(surah, ayah):
     
     return render_template(
         "ayah.html",
-
         verse=verse,
-
         next_url=next_url,
         prev_url=prev_url,
-
         surahs=list(range(1, 115)),
-
         surah_names=SURAH_NAMES,
-
         surah_counts=get_surah_counts()
     )
 
-from flask import jsonify
+
+@app.route("/ayah")
+def get_ayah():
+    surah = request.args.get("surah")
+    ayah = request.args.get("ayah")
+    cur = get_db().cursor()
+    cur.execute("""
+        SELECT text FROM quran
+        WHERE surah=? AND ayah=?
+    """, (surah, ayah))
+
+    row = cur.fetchone()
+
+    if row:
+        return jsonify({
+    "text": row[0],
+    "surah": surah,
+    "ayah": ayah,
+    "total": 286  # optional per surah
+})
+
+    return jsonify({"text": "Not found"}), 404
 
 @app.route("/api/surah/<int:surah>")
 def api_surah(surah):

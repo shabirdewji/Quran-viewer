@@ -20,6 +20,11 @@ body.light {
 
     --card: #ffffff;
 }
+body.controls-hidden .verse-container,
+body.controls-hidden #bookmarkView {
+    padding-left: 10px;
+    margin-left: 0;
+}
 
 /* -------------------------------- */
 /* GLOBAL */
@@ -79,6 +84,7 @@ html, body {
 }
 
 /* LEFT BAR */
+/*
 .left-controls {
     position: fixed;
     left: 8px;
@@ -92,6 +98,29 @@ html, body {
     gap: 10px;
 
     z-index: 2000;
+}
+*/
+.left-controls {
+        position: fixed;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 70px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    z-index: 2000;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* hidden state */
+.left-controls.hidden {
+    transform: translate(-120%, -50%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* RIGHT SIDE */
@@ -350,46 +379,56 @@ html, body {
 
 .nav-arrows {
     position: fixed;
-
     left: 0;
     right: 0;
-
-    bottom: calc(env(safe-area-inset-bottom) + 110px);
+    bottom: calc(env(safe-area-inset-bottom) + 20px);
 
     display: flex;
     justify-content: space-between;
 
     padding: 0 18px;
-
-    z-index: 1000;
-
+    z-index: 9999;
     pointer-events: none;
 }
 
-.nav-arrows button {
+.glass-btn {
     pointer-events: auto;
 
-    width: 48px;
-    height: 48px;
+    width: 58px;
+    height: 58px;
 
-    border-radius: 14px;
-    border: 1px solid var(--border);
-
-    background: rgba(30,30,30,0.7);
-    backdrop-filter: blur(10px);
-
-    color: var(--text);
-    font-size: 22px;
-    font-weight: 600;
+    border-radius: 18px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    font-size: 26px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+    transition: all 0.2s ease;
 }
 
-.nav-arrows button:active {
-    transform: scale(0.95);
+.glass-btn:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow:
+        0 6px 15px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
+
+
 
 .ayah-info {
     margin-top: 10px;

@@ -6,6 +6,40 @@ let currentPlayingAyah = null;
 
 const pageData = window.pageData;
 const surahCounts = window.surahCounts;
+let currentSurah = pageData.surah;
+let currentAyah = pageData.ayah;
+
+const reader = document.querySelector(".reader");
+const bookmarkView = document.getElementById("bookmarkView");
+const ayahEl = document.querySelector(".ayah");
+
+function updateLayout() {
+    const hidden = panel.classList.contains("hidden");
+    document.body.classList.toggle("controls-hidden", hidden);
+}
+function loadAyah(surah, ayah) {
+    fetch(`/ayah?surah=${surah}&ayah=${ayah}`)
+        .then(r => r.json())
+        .then(data => {
+
+            const ayahEl = document.querySelector(".ayah");
+            const infoEl = document.querySelector(".ayah-info");
+
+            ayahEl.textContent = data.text;
+
+            // 🔥 CRITICAL: update state
+            currentSurah = data.surah;
+            currentAyah = data.ayah;
+
+            pageData.surah = data.surah;
+            pageData.ayah = data.ayah;
+
+            if (infoEl) {
+                infoEl.innerHTML =
+                    `Ayah ${data.ayah} / <span id="totalAyahs">${data.total || "?"}</span>`;
+            }
+        });
+}
 
 /* -------------------------------- */
 /* AUDIO                            */
@@ -341,6 +375,7 @@ function loadBookmarks() {
     });
 }
 
+/*
 function showBookmarksView() {
     document.getElementById("bookmarkView").style.display = "block";
     document.querySelector(".reader").style.display = "none";
@@ -351,6 +386,20 @@ function showReaderView() {
     document.getElementById("bookmarkView").style.display = "none";
     document.querySelector(".reader").style.display = "block";
 }
+*/
+
+function showBookmarksView() {
+    bookmarkView.style.display = "block";
+    reader.style.display = "none";
+    loadBookmarks();
+}
+
+function showReaderView() {
+    bookmarkView.style.display = "none";
+    reader.style.display = "block";
+}
+
+
 
 function goToBookmark(surah, ayah) {
     window.location.href =
@@ -534,12 +583,82 @@ function goContinue() {
 
     window.location.href = "/continue";
 }
+/* -------------------------------- */
+/* CONTROL VISIBILITY               */
+/* -------------------------------- */
 
+let lastTap = 0;
+const panel = document.querySelector(".left-controls");
+let hideTimer = null;
+
+function showControls() {
+    if (!panel) return;
+
+    panel.classList.remove("hidden");
+
+    clearTimeout(hideTimer);
+
+    hideTimer = setTimeout(() => {
+        panel.classList.add("hidden");
+    }, 2000);
+}
+
+// initial auto-hide start
+showControls();
+
+document.addEventListener("mousemove", (e) => {
+    if (e.clientX < 200) {
+        showControls();
+    }
+});
+
+document.addEventListener("touchend", (e) => {
+    if (e.target.closest("button, input, select, textarea")) return;
+
+    const now = Date.now();
+
+    // double tap = toggle
+    if (now - lastTap < 300) {
+        if (panel) {
+            panel.classList.toggle("hidden");
+
+            // if user shows it manually, restart auto-hide
+            if (!panel.classList.contains("hidden")) {
+                updateLayout();
+            } else {
+                clearTimeout(hideTimer);
+            }
+        }
+    }
+
+    lastTap = now;
+});
+
+// optional: show controls when user interacts with them
+panel?.addEventListener("touchstart", showControls);
+panel?.addEventListener("mousemove", showControls);
 /* -------------------------------- */
 /* INIT                             */
 /* -------------------------------- */
 
+document.getElementById("prevBtn").addEventListener("click", () => {
+    const ayah = Number(currentAyah);
+
+    if (ayah > 1) {
+        loadAyah(currentSurah, ayah - 1);
+    } else {
+        console.log("Start of surah");
+    }
+});
+
+document.getElementById("nextBtn").addEventListener("click", () => {
+    const ayah = Number(currentAyah);
+
+    loadAyah(currentSurah, ayah + 1);
+});
+
 document.addEventListener("DOMContentLoaded", () => {
+    
 
     audioPlayer =
         document.getElementById("audioPlayer");
