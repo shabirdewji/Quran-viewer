@@ -22,23 +22,28 @@ function loadAyah(surah, ayah) {
         .then(r => r.json())
         .then(data => {
 
-            const ayahEl = document.querySelector(".ayah");
-            const infoEl = document.querySelector(".ayah-info");
+            // 1. update state FIRST
+            currentSurah = Number(data.surah);
+            currentAyah = Number(data.ayah);
 
-            ayahEl.textContent = data.text;
+            pageData.surah = currentSurah;
+            pageData.ayah = currentAyah;
 
-            // 🔥 CRITICAL: update state
-            currentSurah = data.surah;
-            currentAyah = data.ayah;
+            // 2. update main text
+            document.querySelector(".ayah").textContent = data.text;
 
-            pageData.surah = data.surah;
-            pageData.ayah = data.ayah;
+            // 3. update UI header
+            document.getElementById("currentAyah").textContent = currentAyah;
 
-            if (infoEl) {
-                infoEl.innerHTML =
-                    `Ayah ${data.ayah} / <span id="totalAyahs">${data.total || "?"}</span>`;
+            const totalEl = document.getElementById("totalAyahs");
+            if (totalEl) {
+                totalEl.textContent = surahCounts[currentSurah] || "?";
             }
-        });
+
+            // 4. update dropdown LAST (IMPORTANT)
+            updateAyahList();
+        })
+        .catch(console.error);
 }
 
 /* -------------------------------- */
@@ -68,10 +73,13 @@ async function playSurah() {
 
     surahQueue = [];
     currentIndex = 0;
+
     isPlayingSurah = true;
 
-    for (let i = 1; i <= total; i++) {
+    // 🔥 IMPORTANT: clear old highlight BEFORE starting
+    clearHighlight();
 
+    for (let i = 1; i <= total; i++) {
         const id =
             String(surah).padStart(3, "0") +
             String(i).padStart(3, "0");
@@ -84,17 +92,19 @@ async function playSurah() {
     playNextInSurah();
 }
 
+
 function playNextInSurah() {
 
     if (!isPlayingSurah) return;
 
-    highlightAyah(currentIndex + 1);
+    const ayahNumber = currentIndex + 1;
+
+    highlightAyah(ayahNumber);
 
     audioPlayer.src = surahQueue[currentIndex];
     audioPlayer.load();
     audioPlayer.play();
 }
-
 function handleNext() {
 
     if (!isPlayingSurah) return;
@@ -126,19 +136,15 @@ function togglePause() {
 
 function highlightAyah(num) {
 
+    // remove old
     if (currentPlayingAyah) {
-
-        const old = document.getElementById(
-            "ayah-" + currentPlayingAyah
-        );
-
+        const old = document.getElementById("ayah-" + currentPlayingAyah);
         if (old) old.classList.remove("active");
     }
 
     const el = document.getElementById("ayah-" + num);
 
     if (el) {
-
         el.classList.add("active");
 
         el.scrollIntoView({
@@ -193,7 +199,7 @@ function updateAyahList() {
         ayahSelect.appendChild(opt);
     }
 
-    ayahSelect.value = pageData.ayah;
+    ayahSelect.value = String(currentAyah);
 }
 
 /* -------------------------------- */
@@ -395,6 +401,8 @@ function showBookmarksView() {
 }
 
 function showReaderView() {
+    document.getElementById("surahView").style.display = "none";
+    document.querySelector(".reader").style.display = "block";
     bookmarkView.style.display = "none";
     reader.style.display = "block";
 }
@@ -452,6 +460,8 @@ window.addBookmark = function () {
 /* -------------------------------- */
 
 async function loadSurahView() {
+    document.querySelector(".reader").style.display = "none";
+    document.getElementById("surahView").style.display = "block";
     const res =
         await fetch(`/api/surah/${pageData.surah}`);
     const verses = await res.json();
@@ -641,11 +651,12 @@ panel?.addEventListener("mousemove", showControls);
 /* INIT                             */
 /* -------------------------------- */
 
+
 document.getElementById("prevBtn").addEventListener("click", () => {
     const ayah = Number(currentAyah);
-
+    const surah = Number(currentSurah);
     if (ayah > 1) {
-        loadAyah(currentSurah, ayah - 1);
+        loadAyah(surah, ayah - 1);
     } else {
         console.log("Start of surah");
     }
@@ -653,8 +664,14 @@ document.getElementById("prevBtn").addEventListener("click", () => {
 
 document.getElementById("nextBtn").addEventListener("click", () => {
     const ayah = Number(currentAyah);
+    const surah = Number(currentSurah);
+    const max = surahCounts[surah];
 
-    loadAyah(currentSurah, ayah + 1);
+    if (ayah < max) {
+        loadAyah(surah, ayah + 1);
+    } else {
+        console.log("End of surah");
+    }
 });
 
 document.addEventListener("DOMContentLoaded", () => {

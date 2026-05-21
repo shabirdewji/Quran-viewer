@@ -291,11 +291,12 @@ def get_ayah():
     row = cur.fetchone()
 
     if row:
+        surah_counts = get_surah_counts()
         return jsonify({
     "text": row[0],
     "surah": surah,
     "ayah": ayah,
-    "total": 286  # optional per surah
+    "total": surah_counts.get(surah)
 })
 
     return jsonify({"text": "Not found"}), 404
