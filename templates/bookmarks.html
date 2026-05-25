@@ -99,7 +99,16 @@
             gap: 10px;
             padding: 12px;
             border-bottom: 1px solid #333;
+            transition: all 0.25s ease;
             }
+
+
+        .bookmark-card.playing {
+            border: 2px solid #6aa9ff;
+            box-shadow: 0 0 18px rgba(106,169,255,0.5);
+            transform: scale(1.03);
+            background: #1c2533;
+        }
 
     .col-ref {
         color: #888;
@@ -247,7 +256,7 @@
 </div>
 
 
-<h2>Bookmarked Verses 2</h2>
+<h2>Bookmarked Verses</h2>
 
 <div id="list" class="bookmark-grid">Loading...</div>
 
@@ -256,6 +265,7 @@
 const currentAudio = new Audio();
 let currentHighlightId = null;
 let currentPlaybackToken = 0;
+let currentPlayingCard = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     loadBookmarks();
@@ -273,11 +283,12 @@ function loadBookmarks() {
             (data.bookmarks || []).forEach(v => {
 
                 const div = document.createElement("div");
-                div.className = "verse";
+                
 
 div.innerHTML = `
     <div class="bookmark-card"
-        onclick="playAyah('${v.surah}', '${v.ayah}')"
+        id="card-${v.id}"
+        onclick="playAyah('${v.surah}', '${v.ayah}', '${v.id}')"
         style="cursor:pointer;">
 
         <div class="card-ref">
@@ -288,22 +299,7 @@ div.innerHTML = `
             ${v.label || ""}
         </div>
 
-        <div class="card-actions">
 
-
-
-            <a class="btn-open"
-                href="/view/${v.surah}/${v.ayah}"
-                onclick="event.stopPropagation();">
-                Open
-            </a>
-
-            <button class="btn-delete"
-                onclick="event.stopPropagation(); deleteBookmark(${v.id})">
-                Del
-            </button>
-
-        </div>
 
     </div>
 `;
@@ -313,10 +309,35 @@ div.innerHTML = `
         });
 }
 
-function playAyah(surah, ayah) {
 
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
+
+//        <div class="card-actions">
+
+//            <a class="btn-open"
+//                href="/view/${v.surah}/${v.ayah}"
+//                onclick="event.stopPropagation();">
+//                Open
+//            </a>
+
+//            <button class="btn-delete"
+//                onclick="event.stopPropagation(); deleteBookmark(${v.id})">
+//                Del
+//            </button>
+
+//        </div>
+
+
+
+
+
+
+
+function playAyah(surah, ayah, cardId) {
+
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
 
     // invalidate old playback chain
     currentPlaybackToken++;
@@ -324,6 +345,18 @@ function playAyah(surah, ayah) {
     let ayahs = [];
 
     const ayahStr = String(ayah);
+    // remove previous highlight
+    if (currentPlayingCard) {
+        currentPlayingCard.classList.remove("playing");
+    }
+
+    // highlight current card
+    const card = document.getElementById(`card-${cardId}`);
+
+    if (card) {
+        card.classList.add("playing");
+        currentPlayingCard = card;
+    }
 
     if (ayahStr.includes("-")) {
         const parts = ayahStr.split("-");
@@ -439,6 +472,18 @@ function playSequentially(surah, ayahs, index, token = currentPlaybackToken) {
     }
 
     if (index >= ayahs.length) {
+
+        // close player window
+        const box = document.getElementById("playerBox");
+
+        if (box) {
+            box.style.display = "none";
+        }
+
+        if (currentPlayingCard) {
+            currentPlayingCard.classList.remove("playing");
+        }
+
         return;
     }
 
