@@ -1,218 +1,88 @@
-let currentPlayingAyah = null;
+/* ===================================== */
+/* VIEWER.JS — CRASH-PROOF VERSION       */
+/* ===================================== */
+
+/* ---------- SAFE HELPERS ---------- */
+
+const $ = (id) => document.getElementById(id);
+
+function bind(id, event, fn) {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener(event, fn);
+}
+
+/* ---------- STATE ---------- */
+
+let audioPlayer = null;
+
+let currentSurah;
+let currentAyah;
+let currentIndex = 0;
 
 let isPlayingSurah = false;
 let surahQueue = [];
-let currentIndex = 0;
 
-let audioPlayer;
-let isPlayingSurah = false;
-let surahQueue = [];
-let currentIndex = 0;
-let currentPlayingAyah = null;
+const surahCounts = window.surahCounts || {};
+const pageData = window.pageData || null;
 
-window.addEventListener("DOMContentLoaded", () => {
-    audioPlayer = document.getElementById("audioPlayer");
-});
+/* ---------- INIT ---------- */
+
+document.addEventListener("DOMContentLoaded", init);
+
+function init() {
+
+    if (!pageData) return; // prevents crashes on non-viewer pages
+
+    currentSurah = pageData.surah;
+    currentAyah = pageData.ayah;
+    currentIndex = currentAyah - 1;
+
+    audioPlayer = $("audioPlayer");
+
+    setupUI();
+    setupNavigation();
+    setupDropdowns();
+    setupAudio();
+}
 
 
-/* -------------------------------- */
-/* DATA */
-/* -------------------------------- */
+/* ---------- UI INIT ---------- */
 
-const pageData = {
-    surah: {{ verse.surah | tojson }},
-    ayah: {{ verse.ayah | tojson }},
-    nextUrl: {{ next_url | tojson }},
-    prevUrl: {{ prev_url | tojson }}
-};
+function setupUI() {
 
-/* -------------------------------- */
-/* SURAH COUNTS */
-/* -------------------------------- */
-
-//const surahCounts = JSON.parse('{{ surah_counts | tojson | safe }}');
-
-const surahCounts = {{ surah_counts | tojson }};
-
-/* -------------------------------- */
-/* BUILD AYAH DROPDOWN */
-/* -------------------------------- */
-
-function updateAyahList() {
-
-    const surah = document.getElementById("surahSelect").value;
-    const ayahSelect = document.getElementById("ayahSelect");
-
-    const max = surahCounts[surah];
-
-    ayahSelect.innerHTML = "";
-
-    for (let i = 1; i <= max; i++) {
-
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = "Ayah " + i;
-
-        ayahSelect.appendChild(opt);
+    const totalEl = $("totalAyahs");
+    if (totalEl) {
+        totalEl.textContent = surahCounts[currentSurah] || "?";
     }
 
-    ayahSelect.value = pageData.ayah;
+    focusAyah(currentAyah);
+}
+function toggleTheme() {
+    const isLight = document.body.classList.contains("light");
+    setTheme(isLight ? "dark" : "light");
 }
 
-/* -------------------------------- */
-/* CHANGE SURAH */
-/* -------------------------------- */
+let fontSize = parseInt(localStorage.getItem("fontSize")) || 32;
 
-function changeSurah() {
-    const surah = document.getElementById("surahSelect").value;
-    window.location.href = `/view/${surah}/1`;
+function applyFontSize() {
+    document.documentElement.style.setProperty(
+        "--ayah-font-size",
+        fontSize + "px"
+    );
+
+    localStorage.setItem("fontSize", fontSize);
 }
-
-function changeAyah() {
-    const surah = document.getElementById("surahSelect").value;
-    const ayah = document.getElementById("ayahSelect").value;
-    window.location.href = `/view/${surah}/${ayah}`;
-}
-
-/* -------------------------------- */
-/* GO TO AYAH */
-/* -------------------------------- */
-
-
-function goToAyah() {
-
-    const surah =
-        document.getElementById(
-            "surahSelect"
-        ).value;
-
-    const ayah =
-        document.getElementById(
-            "ayahSelect"
-        ).value;
-
-    window.location.href =
-        `/view/${surah}/${ayah}`;
-}
-
-function goTo(surah, ayah) {
-    window.location.href = `/view/${surah}/${ayah}`;
-}
-/* -------------------------------- */
-/* READ */
-/* -------------------------------- */
-
-function toggleBookmarks() {
-    const panel = document.getElementById("bookmarkPanel");
-    if (!panel) return; // prevent crash
-
-    const isOpen = panel.style.display === "block";
-    panel.style.display = isOpen ? "none" : "block";
-
-    if (!isOpen) loadBookmarks();
-}
-
-/* -------------------------------- */
-/* TOAST */
-/* -------------------------------- */
-
-function showToast(msg) {
-
-    const t =
-        document.getElementById("toast");
-
-    t.textContent = msg;
-
-    t.classList.add("show");
-
-    setTimeout(() => {
-        t.classList.remove("show");
-    }, 1500);
-}
-
-/* -------------------------------- */
-/* PIN */
-/* -------------------------------- */
-function pinAyah() {
-    console.log("📌 pinAyah fired");
-
-    fetch("/pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            surah: pageData.surah,
-            ayah: pageData.ayah
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        console.log("Pinned:", data);
-        showToast(`📌 Pinned ${pageData.surah}:${pageData.ayah}`);
-    })
-    .catch(err => console.error("Pin failed:", err));
-}
-
-
-/* -------------------------------- */
-/* CONTINUE */
-/* -------------------------------- */
-
-function goContinue() {
-
-    window.location.href = "/continue";
-}
-
-/* -------------------------------- */
-/* NAVIGATION */
-/* -------------------------------- */
-
-function goNext() {
-    if (pageData.nextUrl && pageData.nextUrl !== "null") {
-        window.location.href = pageData.nextUrl;
-    }
-}
-
-function goPrev() {
-    if (pageData.prevUrl && pageData.prevUrl !== "null") {
-        window.location.href = pageData.prevUrl;
-    }
-}
-
-/* -------------------------------- */
-/* SWIPE */
-/* -------------------------------- */
-
-const page = document.querySelector(".page");
-
-
-const ayah = document.querySelector(".ayah");
-
-// load saved size
-let currentSize = localStorage.getItem("fontSize");
-
-if (!currentSize) {
-    currentSize = 32;
-}
-
-currentSize = parseInt(currentSize);
-
-ayah.style.fontSize = currentSize + "px";
-
+/* ---------- FONT SIZE ---------- */
 function changeFontSize(amount) {
+    fontSize += amount;
 
-    currentSize += amount;
+    if (fontSize < 18) fontSize = 18;
+    if (fontSize > 60) fontSize = 60;
 
-    // limits
-    if (currentSize < 18) currentSize = 18;
-    if (currentSize > 60) currentSize = 60;
-
-    ayah.style.fontSize = currentSize + "px";
-
-    localStorage.setItem("fontSize", currentSize);
+    applyFontSize();
 }
-
-
-
+/* ---------- THEME -------------- */
 function setTheme(mode) {
     document.body.classList.remove("light");
 
@@ -223,325 +93,444 @@ function setTheme(mode) {
     localStorage.setItem("theme", mode);
 }
 
-function toggleTheme() {
-    const isLight = document.body.classList.contains("light");
-    setTheme(isLight ? "dark" : "light");
+/* ---------- NAV BUTTONS ---------- */
+
+function setupNavigation() {
+    bind("nextBtn", "click", goNext);
+    bind("prevBtn", "click", goPrev);
 }
 
-// load saved theme
-window.onload = function () {
-    const saved = localStorage.getItem("theme");
-    if (saved) setTheme(saved);
-};
+/* ---------- DROPDOWNS ---------- */
 
+function setupDropdowns() {
 
+    const surahSelect = $("surahSelect");
 
-
-let audioPlayer = null;
-
-window.addEventListener("DOMContentLoaded", () => {
-    audioPlayer = document.getElementById("audioPlayer");
-});
-
-
-
-
-function playAyah() {
-    const audioId =
-        String(pageData.surah).padStart(3, "0") +
-        String(pageData.ayah).padStart(3, "0");
-
-    const url =
-        "https://everyayah.com/data/Alafasy_128kbps/" +
-        audioId + ".mp3";
-
-    isPlayingSurah = false;
-
-    audioPlayer.src = url;
-    audioPlayer.play();
-}
-
-function playSurah() {
-
-    const surah = pageData.surah;
-    const total = surahCounts[surah];
-
-    surahQueue = [];
-
-    for (let i = 1; i <= total; i++) {
-
-        const id =
-            String(surah).padStart(3, "0") +
-            String(i).padStart(3, "0");
-
-        surahQueue.push(
-            "https://everyayah.com/data/Alafasy_128kbps/" +
-            id + ".mp3"
-        );
+    if (surahSelect) {
+        surahSelect.addEventListener("change", (e) => {
+            window.location.href = `/view/${e.target.value}/1`;
+        });
     }
 
-    currentIndex = 0;
-    isPlayingSurah = true;
+    const ayahSelect = $("ayahSelect");
+
+    if (!ayahSelect) return;
+
+    const total = surahCounts[currentSurah] || 0;
+
+    ayahSelect.innerHTML = "";
+
+    for (let i = 1; i <= total; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = "Ayah " + i;
+        ayahSelect.appendChild(opt);
+    }
+
+    ayahSelect.value = currentAyah;
+
+    ayahSelect.addEventListener("change", (e) => {
+        window.location.href =
+            `/view/${currentSurah}/${e.target.value}`;
+    });
+}
+
+/* ---------- AUDIO ---------- */
+
+function setupAudio() {
+
+    if (!audioPlayer) return;
+
+    audioPlayer.addEventListener("ended", handleAudioEnd);
+}
+
+function handleAudioEnd() {
+
+    if (!isPlayingSurah) return;
+
+    currentIndex++;
+
+    if (currentIndex >= surahQueue.length) {
+        isPlayingSurah = false;
+        return;
+    }
 
     playNextInSurah();
 }
 
-function playNextInSurah() {
-    if (!isPlayingSurah) return;
+/* ---------- NAVIGATION ---------- */
 
-    if (currentIndex >= surahQueue.length) {
-        isPlayingSurah = false;
-        clearHighlight();
-        return;
+function goNext() {
+    let s = currentSurah;
+    let a = currentAyah;
+    const max = surahCounts[s] || 0;
+    a++;
+    if (a > max) {
+        s++;
+        a = 1;
+        if (!surahCounts[s]) return;
     }
-
-    const ayahNumber = currentIndex + 1;
-    highlightAyah(ayahNumber);
-
-    const src = surahQueue[currentIndex];
-
-    // IMPORTANT: reset event before setting src
-    audioPlayer.onended = null;
-
-    audioPlayer.src = src;
-
-    const playPromise = audioPlayer.play();
-
-    if (playPromise !== undefined) {
-        playPromise.catch(err => {
-            console.log("Playback error:", err);
-            isPlayingSurah = false;
-        });
-    }
-
-    audioPlayer.onended = () => {
-        currentIndex++;
-        playNextInSurah();
-    };
+    window.location.href = `/view/${s}/${a}`;
 }
-function highlightAyah(num) {
+
+function goPrev() {
+    let s = currentSurah;
+    let a = currentAyah;
+    a--;
+    if (a < 1) {
+        s--;
+        if (!surahCounts[s]) return;
+        a = surahCounts[s];
+    }
+    window.location.href = `/view/${s}/${a}`;
+}
+
+/* ---------- AYAH FOCUS ---------- */
+
+function focusAyah(num) {
+
+    currentAyah = num;
+    currentIndex = num - 1;
 
     // remove old highlight
-    if (currentPlayingAyah) {
-        const old = document.getElementById("ayah-" + currentPlayingAyah);
-        if (old) old.classList.remove("active");
-    }
+    document.querySelectorAll(".ayah-block")
+        .forEach(el => {
+            el.classList.remove("active");
+        });
 
-    // add new highlight
+    // highlight current
     const el = document.getElementById("ayah-" + num);
 
     if (el) {
+
         el.classList.add("active");
 
-        // optional auto-scroll (smooth reading)
         el.scrollIntoView({
             behavior: "smooth",
             block: "center"
         });
     }
 
-    currentPlayingAyah = num;
-}
+    // top ayah counter
+    const currentEl =
+        document.getElementById("currentAyah");
 
-function clearHighlight() {
-    if (currentPlayingAyah) {
-        const el = document.getElementById("ayah-" + currentPlayingAyah);
-        if (el) el.classList.remove("active");
-    }
-    currentPlayingAyah = null;
-}
-
-
-
-function togglePause() {
-
-    if (audioPlayer.paused) {
-        audioPlayer.play();
-        return;
+    if (currentEl) {
+        currentEl.textContent = num;
     }
 
-    audioPlayer.pause();
+    // dropdown sync
+    const select =
+        document.getElementById("ayahSelect");
+
+    if (select) {
+        select.value = num;
+    }
+
+    // autosave progress
+    sendProgress();
 }
 
+/* ---------- AUDIO PLAYBACK ---------- */
 
+function playAyah() {
+
+    if (!audioPlayer) return;
+
+    const id =
+        String(currentSurah).padStart(3, "0") +
+        String(currentAyah).padStart(3, "0");
+
+    audioPlayer.src =
+        "https://everyayah.com/data/Alafasy_128kbps/" + id + ".mp3";
+
+    audioPlayer.play();
+}
+
+function playSurah() {
+
+    const total = surahCounts[currentSurah] || 0;
+
+    surahQueue = [];
+
+    for (let i = 1; i <= total; i++) {
+
+        const id =
+            String(currentSurah).padStart(3, "0") +
+            String(i).padStart(3, "0");
+
+        surahQueue.push(
+            "https://everyayah.com/data/Alafasy_128kbps/" + id + ".mp3"
+        );
+    }
+
+    currentIndex = currentAyah - 1;
+    isPlayingSurah = true;
+
+    playNextInSurah();
+}
+
+function playNextInSurah() {
+
+    if (!isPlayingSurah) return;
+
+    // current ayah being played
+    const ayahNum = currentIndex + 1;
+
+    // highlight it
+    focusAyah(ayahNum);
+
+    // load audio
+    audioPlayer.src = surahQueue[currentIndex];
+
+    audioPlayer.play()
+        .catch(err => {
+            console.log(err);
+            isPlayingSurah = false;
+        });
+}
+
+/* ---------- PROGRESS ---------- */
+
+function sendProgress() {
+
+    if (!currentSurah || !currentAyah) return;
+
+    fetch("/save_progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            surah: currentSurah,
+            ayah: currentAyah
+        })
+    }).catch(() => {});
+}
+
+/* ---------- BOOKMARK ---------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadBookmarks();
+});
 
 function loadBookmarks() {
-
-    fetch("/bookmarks")
+    fetch("/api/bookmarks")
         .then(res => res.json())
         .then(data => {
 
-            const box = document.getElementById("bookmarkList");
+            const box = document.getElementById("list");
             box.innerHTML = "";
 
-            const list = data.bookmarks || [];
-
-            if (list.length === 0) {
+            if (!data.bookmarks || data.bookmarks.length === 0) {
                 box.innerHTML = "<p>No bookmarks yet</p>";
                 return;
             }
 
-            list.forEach(b => {
+            data.bookmarks.forEach(b => {
 
-                const div = document.createElement("div");
-                div.style.padding = "10px";
-                div.style.borderBottom = "1px solid #333";
+                const row = document.createElement("div");
+                row.className = "verse";
 
-                div.innerHTML =
-                    `<div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
-                        <div style="flex:1;">
-                            📌 ${b.label ? b.label : `Surah ${b.surah}:${b.ayah}`}
-                            <span style="opacity:0.6;font-size:12px;margin-left:6px;">
-                                (${b.surah}:${b.ayah})
-                            </span>
+                row.innerHTML = `
+                    <div class="left">
+                        <div class="ref">
+                            Surah ${b.surah}:${b.ayah}
                         </div>
 
-                        <button onclick="goToBookmark(${b.surah}, ${b.ayah})">Go</button>
-                        <button onclick="deleteBookmark(${b.id})">Del</button>
-                    </div>`;
+                        <div class="text">
+                            ${b.label || "No label"}
+                        </div>
+                    </div>
 
-                box.appendChild(div);
+                    <div class="actions">
+                        <button onclick="openVerse(${b.surah}, ${b.ayah})">
+                            Open
+                        </button>
+
+                        <button class="delete-btn" onclick="deleteBookmark(${b.id})">
+                            Delete
+                        </button>
+                    </div>
+                `;
+
+                box.appendChild(row);
             });
         });
 }
 
-function goToBookmark(surah, ayah) {
+function openVerse(surah, ayah) {
+    window.location.href = `/view/${surah}/${ayah}`;
+}
+
+function deleteBookmark(id) {
+    fetch(`/bookmark/${id}`, {
+        method: "DELETE"
+    })
+    .then(() => loadBookmarks());
+}
+
+window.addBookmark = function () {
+
+    const label = prompt("Enter bookmark name:");
+    if (!label) return;
+
+    console.log("ADD BOOKMARK CLICKED");
+
+    fetch("/bookmark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            surah: window.pageData.surah,
+            ayah: window.pageData.ayah,
+            label: label
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        console.log("Bookmark saved");
+    })
+    .catch(err => console.error("Bookmark failed:", err));
+};
+/* ---------- PIN ------------------- */
+function pinAyah() {
+    if (!currentSurah || !currentAyah) {
+        console.error("No ayah selected");
+        return;
+    }
+
+    fetch("/pin", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            surah: currentSurah,
+            ayah: currentAyah
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("pinStatus").innerText =
+            `📌 Pinned ${currentSurah}:${currentAyah}`;
+
+        showToast(`📌 Pinned ${currentSurah}:${currentAyah}`);
+        
+        console.log("Pinned:", data);
+    })
+    .catch(err => console.error("Pin error:", err));
+}
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerText = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("show");
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+}
+async function goContinue() {
+    const res = await fetch("/pin");
+    const pin = await res.json();
+
+    if (!pin || !pin.surah || !pin.ayah) {
+        console.log("No pin found");
+        return;
+    }
+
+    console.log("Going to pin:", pin);
+
+    goToAyah(pin.surah, pin.ayah);
+}
+
+let pinsCache = [];
+let currentPinIndex = -1;
+
+async function loadPins() {
+    const res = await fetch("/pins");
+    pinsCache = await res.json();
+}
+
+function goToAyah(surah, ayah) {
     window.location.href = `/view/${surah}/${ayah}`;
 }
 
 
 
 
+/* ---------- CONTROLS ---------- */
 
+function togglePause() {
 
-function deleteBookmark(id) {
+    if (!audioPlayer) return;
 
-    fetch(`/bookmark/${id}`, {
-        method: "DELETE"
-    })
-    .then(res => res.json())
-    .then(() => {
-        loadBookmarks(); // refresh panel
-    })
-    .catch(err => console.error("Delete failed:", err));
-}
-
-/* LOAD SAVED THEME */
-window.addEventListener("DOMContentLoaded", () => {
-    const saved = localStorage.getItem("theme") || "dark";
-    setTheme(saved);
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-    const total = surahCounts[pageData.surah];
-    document.getElementById("totalAyahs").textContent = total;
-});
-
-
-
-let startX = 0;
-let startY = 0;
-
-page.addEventListener("touchstart", (e) => {
-
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-
-}, { passive: true });
-
-page.addEventListener("touchend", (e) => {
-
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-
-    const dx = endX - startX;
-    const dy = endY - startY;
-
-    // REQUIRE HORIZONTAL SWIPE
-
-    if (Math.abs(dx) < 70) return;
-
-    // IGNORE MOSTLY VERTICAL MOVEMENT
-
-    if (Math.abs(dy) > 80) return;
-
-    // LEFT
-
-    if (dx < 0) {
-        goNext();
+    if (audioPlayer.paused) {
+        audioPlayer.play();
+    } else {
+        audioPlayer.pause();
     }
-
-    // RIGHT
-
-    if (dx > 0) {
-        goPrev();
-    }
-
-}, { passive: true });
-
-/* -------------------------------- */
-/* AUTO SAVE LAST VIEWED */
-/* -------------------------------- */
-
-function sendProgress() {
-
-    const surah = document.getElementById("surahSelect");
-    const ayah = document.getElementById("ayahSelect");
-
-    if (!surah || !ayah) return;
-
-    fetch("/save_progress", {   // ✅ FIXED HERE
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            surah: surah.value,
-            ayah: ayah.value
-        })
-    });
 }
-
-
 /* -------------------------------- */
-/* INIT */
+/* AUTO HIDE CONTROLS               */
 /* -------------------------------- */
+
+let controlsTimer = null;
+
 document.addEventListener("DOMContentLoaded", () => {
 
-    const surah = document.getElementById("surahSelect");
-    const ayah = document.getElementById("ayahSelect");
+    applyFontSize();
 
-    if (surah) surah.addEventListener("change", sendProgress);
-    if (ayah) ayah.addEventListener("change", sendProgress);
-});
+    const saved = localStorage.getItem("theme") || "dark";
+    setTheme(saved);
 
-window.addEventListener(
-    "DOMContentLoaded",
-    () => {
+    const controls =
+        document.querySelector(".left-controls");
 
-        updateAyahList();
+    if (!controls) return;
+
+    function hideControls() {
+        controls.classList.add("hidden");
     }
-);
 
-window.addBookmark = function () {
+    function showControls() {
 
-    console.log("ADD BOOKMARK CLICKED");
+        controls.classList.remove("hidden");
 
-    const label = prompt("Name this bookmark (optional):");
+        clearTimeout(controlsTimer);
 
-    fetch("/bookmark", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            surah: pageData.surah,
-            ayah: pageData.ayah,
-            label: label || ""
-        })
-    })
-    .then(r => r.json())
-    .then(() => {
-    loadBookmarks();
+        controlsTimer = setTimeout(() => {
+            hideControls();
+        }, 2000);
+    }
 
-    const panel = document.getElementById("bookmarkPanel");
-    if (panel) panel.style.display = "block";
-})
-    .catch(err => console.error(err));
-};
+    // initial timer
+    showControls();
+
+    // mouse enters controls area
+    controls.addEventListener("mouseenter", () => {
+        showControls();
+    });
+
+    // movement near left edge restores controls
+    document.addEventListener("mousemove", (e) => {
+
+        if (e.clientX < 120) {
+            showControls();
+        }
+    });
+
+    // touch support
+    document.addEventListener("touchstart", (e) => {
+
+        const x = e.touches[0].clientX;
+
+        if (x < 120) {
+            showControls();
+        }
+    });
+});

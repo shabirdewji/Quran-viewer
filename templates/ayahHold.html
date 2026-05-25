@@ -25,28 +25,24 @@
 
     <!-- LEFT CONTROLS -->
     <div class="left-controls">
-    <div class="tool-group compact">
-        <button class="tool-btn" onclick="pinAyah()">📌 Pin</button>
-        <button class="tool-btn" onclick="addBookmark()">🔖 Bookmark</button>
-        <button class="tool-btn" onclick="window.location.href='/bookmarks'">📚 View Bookmarks</button>
-    </div>
-    <div class="tool-group compact">
-        <button class="tool-btn" onclick="changeFontSize(-2)">A−</button>
-        <button class="tool-btn" onclick="changeFontSize(2)">A+</button>
-        <button class="tool-btn" onclick="toggleTheme()">🌓 Dark/Light</button>
-    </div>
-    <div class="tool-group compact">
-        <button class="tool-btn" onclick="playAyah()">🔊 Play Ayah</button>
-        <button class="tool-btn" onclick="playSurah()">📖 Play Surah</button>
-        <button class="tool-btn" onclick="togglePause()">⏸ Pause</button>
-    </div>
-    <div id="pinStatus">Not pinned</div>
-<!--
+
+        <button onclick="pinAyah()">📌</button>
+        <button onclick="addBookmark()">🔖</button>
+        <button onclick="window.location.href='/bookmarks'">📚</button>
+
+        <button onclick="changeFontSize(-2)">A−</button>
+        <button onclick="changeFontSize(2)">A+</button>
+
+        <button onclick="toggleTheme()">🌓</button>
+
+        <button onclick="playAyah()">🔊</button>
+        <button onclick="playSurah()">📖</button>
+        <button onclick="togglePause()">⏸</button>
+
         <button onclick="goPrevAyah()">◀</button>
         <button onclick="goNextAyah()">▶</button>
--->
+
     </div>
-    
 
     <!-- MAIN -->
     <div class="main">
@@ -122,7 +118,7 @@
 
 </div>
 
-
+<div id="list"></div>
 <div id="list">Loading...</div>
 <!-- AUDIO -->
 <audio id="audioPlayer"></audio>
@@ -143,7 +139,8 @@ window.surahCounts =
 
 </script>
 
-<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script src="{{ url_for('static',
+filename='js/viewer.js') }}"></script>
 
 </body>
 </html>

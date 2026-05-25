@@ -1,0 +1,295 @@
+/* -------------------------------- */
+/* ROOT VARIABLES                  */
+/* -------------------------------- */
+
+:root {
+    --bg: #0f0f10;
+    --text: #ffffff;
+    --muted: #8a8a8a;
+    --border: #2a2a2a;
+    --accent: #4caf50;
+
+    --card: #1c1c1e;
+
+    --topbar-height: 110px;
+}
+
+/* LIGHT THEME */
+body.light {
+    --bg: #f6f6f7;
+    --text: #111;
+    --muted: #666;
+    --border: #e2e2e2;
+    --accent: #2563eb;
+
+    --card: #ffffff;
+}
+
+/* -------------------------------- */
+/* GLOBAL                          */
+/* -------------------------------- */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+}
+
+/* -------------------------------- */
+/* APP LAYOUT                      */
+/* -------------------------------- */
+
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+/* MAIN AREA */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-left: 90px;
+}
+
+/* -------------------------------- */
+/* LEFT FLOATING CONTROLS         */
+/* -------------------------------- */
+
+.left-controls {
+    position: fixed;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    width: 70px;
+
+    z-index: 2000;
+
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.left-controls.hidden {
+    opacity: 0;
+    transform: translate(-20px, -50%);
+    pointer-events: none;
+}
+
+/* buttons */
+.left-controls button,
+.left-controls label {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+
+    background: rgba(30,30,30,0.75);
+    color: var(--text);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 16px;
+
+    backdrop-filter: blur(12px);
+}
+
+/* -------------------------------- */
+/* TOP BAR                         */
+/* -------------------------------- */
+
+.topbar {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(15,15,15,0.7);
+    backdrop-filter: blur(10px);
+}
+
+.surah {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.search-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-bar select {
+    flex: 1;
+    padding: 8px 10px;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    color: var(--text);
+}
+
+/* ayah info */
+.ayah-info {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* -------------------------------- */
+/* PAGE / SCROLL AREA              */
+/* -------------------------------- */
+
+.page {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+}
+
+/* -------------------------------- */
+/* AYAH BLOCKS                     */
+/* -------------------------------- */
+
+.ayah-block {
+    padding: 26px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: 0.2s ease;
+}
+
+.ayah-block.active {
+    background: rgba(76,175,80,0.12);
+    border-radius: 14px;
+}
+
+/* ayah number */
+.ayah-number {
+    font-size: 12px;
+    opacity: 0.5;
+    margin-bottom: 8px;
+}
+
+/* -------------------------------- */
+/* WORD BY WORD SYSTEM            */
+/* -------------------------------- */
+
+.word {
+    display: inline-block;
+    padding: 0 3px;
+    border-radius: 6px;
+
+    transition: 0.15s ease;
+}
+
+.word.active {
+    background: rgba(76,175,80,0.35);
+    color: #fff;
+}
+
+/* -------------------------------- */
+/* NAV BUTTONS                    */
+/* -------------------------------- */
+
+.nav-arrows {
+    position: fixed;
+
+    left: 0;
+    right: 0;
+    bottom: calc(env(safe-area-inset-bottom) + 90px);
+
+    display: flex;
+    justify-content: space-between;
+
+    padding: 0 16px;
+
+    z-index: 1500;
+
+    pointer-events: none;
+}
+
+.nav-arrows button {
+    pointer-events: auto;
+
+    width: 52px;
+    height: 52px;
+
+    border-radius: 16px;
+
+    border: 1px solid var(--border);
+    background: rgba(30,30,30,0.6);
+
+    backdrop-filter: blur(12px);
+
+    color: var(--text);
+    font-size: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-arrows button:active {
+    transform: scale(0.95);
+}
+
+/* -------------------------------- */
+/* TOAST                          */
+/* -------------------------------- */
+
+.toast {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: rgba(0,0,0,0.85);
+    color: white;
+
+    padding: 10px 14px;
+    border-radius: 12px;
+
+    font-size: 13px;
+
+    opacity: 0;
+    transition: 0.25s ease;
+    pointer-events: none;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+/* -------------------------------- */
+/* MOBILE                         */
+/* -------------------------------- */
+
+@media (max-width: 768px) {
+
+    .main {
+        padding-left: 60px;
+    }
+
+    .left-controls {
+        width: 56px;
+    }
+
+    .left-controls button,
+    .left-controls label {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+
+    .ayah-block {
+        padding: 22px 10px;
+    }
+}

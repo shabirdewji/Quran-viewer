@@ -259,76 +259,7 @@ html, body {
 #bookmarkView {
     margin-left: 70px;
 }
-.left-toolbar {
-    position: fixed;
-    left: 0;
-    top: 100px;
 
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-
-    padding: 12px;
-}
-
-.tool-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    background: #1c1c1e;
-    border: 1px solid #2a2a2a;
-    border-radius: 16px;
-
-    padding: 12px;
-}
-.tool-group.compact {
-    gap: 6px;
-    padding: 6px;
-    border-radius: 12px;
-}
-
-.tool-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    background: #2a2a2a;
-    color: white;
-
-    border: none;
-    border-radius: 12px;
-
-    padding: 14px 16px;
-    min-width: 180px;
-
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.tool-btn:hover {
-    background: #3a3a3a;
-    transform: translateX(4px);
-}
-
-/* 🔥 BIG ICONS */
-.tool-btn .icon {
-    font-size: 22px;
-    width: 14px;
-    text-align: center;
-}
-
-/* labels */
-.tool-btn .label {
-    font-size: 14px;
-    font-weight: 500;
-}
-
-/* optional highlight for important actions */
-.tool-btn.primary {
-    background: #4caf50;
-    font-weight: bold;
-}
 /* -------------------------------- */
 /* MOBILE */
 /* -------------------------------- */
