@@ -21,6 +21,9 @@
 
 <body>
 
+<div id="surah" style="display:none"></div>
+<div id="ayah" style="display:none"></div>
+
 <div class="app">
 
     <!-- LEFT CONTROLS -->
@@ -32,7 +35,8 @@
     </div>
     <div class="tool-group compact">
         <button class="tool-btn" onclick="changeFontSize(-2)">A−</button>
-        <button class="tool-btn" onclick="changeFontSize(2)">A+</button>
+        
+        <button class="tool-btn" onclick="event.stopPropagation(); changeFontSize(2)">A+</button>
         <button class="tool-btn" onclick="toggleTheme()">🌓 Dark/Light</button>
     </div>
     <div class="tool-group compact">
@@ -70,6 +74,10 @@
                     {% endfor %}
                 </select>
 
+                <button id="summaryBtn" class="summary-btn">
+                Summary
+                </button>
+
                 <!-- AYAH DROPDOWN -->
                 <select id="ayahSelect"></select>
 
@@ -86,25 +94,55 @@
                         onclick="goContinue()">
                     Continue
                 </button>
-
             </div>
         </div>
 
         <!-- VIEW -->
         <div class="page">
-            <div class="reader">
-                {% for verse in verses %}
-                <div class="ayah-block"
-                     id="ayah-{{ verse.ayah }}">
-                    <div class="ayah-number">
-                        {{ verse.ayah }}
-                    </div>
-                    <div class="ayah">
-                        {{ verse.text }}
-                    </div>
+
+
+        <div class="reader">
+            {% for verse in verses %}
+            <div class="ayah-row" id="ayah-{{ verse.ayah }}" data-ayah="{{ verse.ayah }}">
+            <div class="ayah-card">
+
+                <input type="checkbox"
+                    class="read-toggle"
+                    {% if verse.is_read %}checked{% endif %}>
+
+                <div class="note-dot"></div>
+
+                <div class="ayah-number">
+                    {{ verse.ayah }}
                 </div>
-                {% endfor %}
+
+                <div class="ayah">
+                    {{ verse.text }}
+                </div>
+
             </div>
+                <div class="note-popup hidden">
+                    <div class="note-header">
+                        Notes
+                    </div>
+                        <textarea class="note-text"
+                                placeholder="Write your reflection here..."></textarea>
+
+                    <div class="note-preview"></div>
+
+                    <div class="note-actions">
+                        
+                        <button class="save-note">Save</button>
+                        <button class="close-note">Close</button>
+                    </div>
+
+                    <div id="ayahText"></div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
         </div>
     </div>
 </div>
@@ -122,8 +160,14 @@
 
 </div>
 
+        <!-- ✅ GLOBAL UI ELEMENTS (ONLY ONCE) -->
 
-<div id="list">Loading...</div>
+<div id="summaryPopup" class="popup-content hidden">
+    <div id="summaryText"></div>
+
+    <button id="closeSummary">Close</button>
+</div>
+ <div id="popup" class="popup hidden"></div>
 <!-- AUDIO -->
 <audio id="audioPlayer"></audio>
 

@@ -150,7 +150,18 @@ def get_surah_counts():
 
 @app.route("/")
 def home():
-    # redirect to last read or default surah
+
+    conn = get_db()
+
+    row = conn.execute("""
+        SELECT surah, ayah
+        FROM progress
+        WHERE id = 1
+    """).fetchone()
+
+    if row:
+        return redirect(f"/view/{row['surah']}/{row['ayah']}")
+
     return redirect("/view/1/1")
 
 @app.route("/view/<int:surah>/<int:ayah>")
@@ -161,7 +172,7 @@ def view_surah(surah, ayah):
 
     # ✅ GET FULL SURAH
     cur.execute("""
-        SELECT surah, ayah, text
+        SELECT surah, ayah, text, is_read
         FROM quran
         WHERE surah=?
         ORDER BY ayah
@@ -176,7 +187,8 @@ def view_surah(surah, ayah):
         {
             "surah": r["surah"],
             "ayah": r["ayah"],
-            "text": r["text"]
+            "text": r["text"],
+            "is_read": r["is_read"]
         }
         for r in rows
     ]
@@ -205,13 +217,45 @@ def save_progress():
 
     data = request.json
 
-    # optional DB save (you already had this)
     surah = data.get("surah")
     ayah = data.get("ayah")
 
-    print("Progress:", surah, ayah)
+    conn = get_db()
+
+    conn.execute("""
+        INSERT INTO progress (id, surah, ayah)
+        VALUES (1, ?, ?)
+        ON CONFLICT(id)
+        DO UPDATE SET
+            surah=excluded.surah,
+            ayah=excluded.ayah
+    """, (surah, ayah))
+
+    conn.commit()
 
     return jsonify({"status": "ok"})
+
+@app.route("/get_progress")
+def get_progress():
+
+    conn = get_db()
+
+    row = conn.execute("""
+        SELECT surah, ayah
+        FROM progress
+        WHERE id = 1
+    """).fetchone()
+
+    if row:
+        return jsonify({
+            "surah": row["surah"],
+            "ayah": row["ayah"]
+        })
+
+    return jsonify({
+        "surah": 1,
+        "ayah": 1
+    })
 
 
 @app.route("/bookmark", methods=["POST"])
@@ -249,7 +293,7 @@ def get_bookmarks():
     cur.execute("""
         SELECT id, surah, ayah, label
         FROM bookmarks
-        ORDER BY id DESC
+        ORDER BY id ASC
     """)
 
     rows = cur.fetchall()
@@ -289,85 +333,210 @@ def delete_bookmark(id):
 
 @app.route("/pin", methods=["POST"])
 def pin():
-
     data = request.get_json()
 
-    if not data:
-        return jsonify({"error": "No JSON received"}), 400
-
-    surah = data.get("surah")
-    ayah = data.get("ayah")
-
-    if surah is None or ayah is None:
-        return jsonify({"error": "Missing surah or ayah"}), 400
+    surah = data["surah"]
+    ayah = data["ayah"]
 
     conn = get_db()
-    cur = conn.cursor()
-
-    # Optional: prevent duplicates
-    cur.execute("""
-        SELECT id FROM pins
-        WHERE surah = ? AND ayah = ?
-    """, (surah, ayah))
-
-    exists = cur.fetchone()
-
-    if exists:
-        conn.close()
-        return jsonify({"status": "already_pinned"})
-
-    cur.execute("""
-        UPDATE pins
-        SET surah = ?, ayah = ?
-        WHERE id = 1
-    """, (surah, ayah))
-
+    conn.execute(
+        "UPDATE pins SET surah=?, ayah=? WHERE id=1",
+        (surah, ayah)
+    )
     conn.commit()
     conn.close()
 
-    return jsonify({
-        "status": "ok",
-        "surah": surah,
-        "ayah": ayah
-    })
+    return jsonify({"status": "ok"})
+    
     
 @app.route("/pin", methods=["GET"])
 def get_pin():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT surah, ayah FROM pins WHERE id = 1")
+    cur.execute("SELECT surah, ayah FROM pins WHERE id=1")
     row = cur.fetchone()
 
     conn.close()
 
-    if row:
-        return jsonify({
-            "surah": row["surah"],
-            "ayah": row["ayah"]
-        })
+    if not row:
+        return jsonify({})
 
-    return jsonify(None)
+    return jsonify({
+        "surah": row["surah"],
+        "ayah": row["ayah"]
+    })
     
-@app.route("/pins", methods=["GET"])
-def get_pins():
+@app.route("/set_read", methods=["POST"])
+def set_read():
+
+    data = request.get_json()
+
+    ayah = int(data["ayah"])
+    surah = int(data["surah"])
+    is_read = 1 if data["is_read"] else 0
+
     conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute("SELECT surah, ayah FROM pins ORDER BY id ASC")
-    rows = cur.fetchall()
     
-    for row in rows:
-        print("PIN TO:", row["surah"], row["ayah"])
+    cur = conn.execute("""
+    SELECT is_read FROM quran
+        WHERE surah = ? AND ayah = ?
+    """, (surah, ayah))
+
+    print("BEFORE UPDATE ROW:", cur.fetchone())
+
+    cur = conn.execute("""
+        UPDATE quran
+        SET is_read = ?
+        WHERE surah = ? AND ayah = ?
+    """, (is_read, surah, ayah))
+
+    conn.commit()
+
+    print("ROWS UPDATED:", cur.rowcount)
 
     conn.close()
 
-    return jsonify([
-        {"surah": r["surah"], "ayah": r["ayah"]}
+    return {"ok": True, "updated": cur.rowcount}
+
+@app.route("/get_read")
+def get_read():
+    print("🔥 GET_READ HIT")
+    surah = request.args.get("surah")
+    print("In get_read, surah = ", surah)
+
+    conn = get_db()
+    conn.row_factory = sqlite3.Row
+
+    rows = conn.execute("""
+        SELECT ayah, is_read
+        FROM quran
+        WHERE surah=?
+    """, (surah,)).fetchall()
+
+    conn.close()
+
+    return {
+        r["ayah"]: r["is_read"]
         for r in rows
-    ])
+    }
+    
+    
+@app.route("/get_note")
+def get_note():
+
+    surah = int(request.args.get("surah"))
+    ayah = request.args.get("ayah")
+
+    conn = get_db()
+
+    # -----------------------------------
+    # SINGLE AYAH (popup)
+    # -----------------------------------
+    if ayah is not None:
+        ayah = int(ayah)
+
+        row = conn.execute("""
+            SELECT note
+            FROM notes
+            WHERE surah = ? AND ayah = ?
+        """, (surah, ayah)).fetchone()
+
+        conn.close()
+
+        return jsonify({
+            "note": row["note"] if row else ""
+        })
+
+    # -----------------------------------
+    # ALL NOTES IN SURAH (dots)
+    # -----------------------------------
+    rows = conn.execute("""
+        SELECT ayah, note
+        FROM notes
+        WHERE surah = ?
+    """, (surah,)).fetchall()
+
+    conn.close()
+
+    return jsonify({
+        str(row["ayah"]): row["note"]
+        for row in rows
+    })
+
+@app.route("/get_notes")
+def get_notes():
+
+    surah = int(request.args.get("surah"))
+    print("SURAH REQUESTED:", surah)
     
 
+    conn = get_db()
 
+    rows = conn.execute("""
+        SELECT ayah, note
+        FROM notes
+        WHERE surah = ?
+    """, (surah,)).fetchall()
+
+    conn.close()
+
+    return jsonify({
+        str(row["ayah"]): row["note"]
+        for row in rows
+    })
+    
+@app.route("/save_note", methods=["POST"])
+def save_note():
+
+    data = request.get_json()
+
+    surah = int(data["surah"])
+    ayah = int(data["ayah"])
+    note = data["note"]
+
+    conn = get_db()
+
+    conn.execute("""
+        INSERT INTO notes (surah, ayah, note)
+        VALUES (?, ?, ?)
+
+        ON CONFLICT(surah, ayah)
+        DO UPDATE SET
+            note = excluded.note
+    """, (surah, ayah, note))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "ok": True
+    })
+    
+@app.route("/get_surah_summary")
+def get_surah_summary():
+    print("IN GET_SURA_SUMMARY")
+    surah = request.args.get("surah")
+
+    if surah is None:
+        return jsonify({"text": ""})
+
+    conn = get_db()
+
+    row = conn.execute("""
+        SELECT text
+        FROM surah
+        WHERE id = ?
+    """, (int(surah),)).fetchone()
+    
+    #print("TEXT:", row["text"])
+    
+
+    conn.close()
+
+    return jsonify({
+        "text": row["text"] if row else ""
+    })
+    
 if __name__ == "__main__":
     app.run(debug=True)
