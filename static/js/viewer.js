@@ -534,7 +534,7 @@ function renderNote(note) {
 }
 /* =========================================================
    SUMMARY POPUP
-========================================================= */
+
 document.addEventListener("DOMContentLoaded", () => {
     const summaryBtn = document.getElementById("summaryBtn");
     const closeBtn = document.getElementById("closeSummary");
@@ -551,6 +551,53 @@ document.addEventListener("DOMContentLoaded", () => {
     if (closeBtn) {
         closeBtn.addEventListener("click", () => {
             document.getElementById("summaryPopup").classList.add("hidden");
+        });
+    }
+});
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+    const summaryBtn = document.getElementById("summaryBtn");
+    const closeBtn = document.getElementById("closeSummary");
+    const saveBtn = document.getElementById("saveSummary");
+
+    let currentSurah = null;
+
+    if (summaryBtn) {
+        summaryBtn.addEventListener("click", async () => {
+            currentSurah = document.getElementById("surahSelect").value;
+
+            const res = await fetch(`/get_surah_summary?surah=${currentSurah}`);
+            const data = await res.json();
+
+            document.getElementById("summaryText").value = data.text || "";
+
+            document.getElementById("summaryPopup").classList.remove("hidden");
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            document.getElementById("summaryPopup").classList.add("hidden");
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const text = document.getElementById("summaryText").value;
+
+            await fetch(`/update_surah_summary`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    surah: currentSurah,
+                    text: text
+                })
+            });
+
+            alert("Summary saved");
         });
     }
 });

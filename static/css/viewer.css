@@ -537,6 +537,21 @@ html, body {
 
     z-index: 9999;
 }
+
+.summary-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: flex-end; /* or flex-start if you prefer */
+}
+
+#summaryText {
+    width: 100%;
+    min-height: 200px;
+    resize: vertical;
+}
+
+
 .popup-content {
     position: fixed;
     top: 50%;

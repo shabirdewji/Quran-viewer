@@ -157,15 +157,19 @@
 
 </div>
 
-        <!-- ✅ GLOBAL UI ELEMENTS (ONLY ONCE) -->
+<!-- ✅ GLOBAL UI ELEMENTS (ONLY ONCE) -->
 
 <div id="summaryPopup" class="popup-content hidden">
-    <div id="summaryText"></div>
-    
-    <button id="wikiBtn">📖 Wiki</button>
-    <button id="closeSummary">Close</button>
+    <textarea id="summaryText"></textarea>
+    <div class="summary-actions">
+        <button id="saveSummary">💾 Save</button>
+        <button id="wikiBtn">📖 Wiki</button>
+        <button id="closeSummary">Close</button>
+    </div>
 </div>
- <div id="popup" class="popup hidden"></div>
+<div id="popup" class="popup hidden"></div>
+
+
 <!-- AUDIO -->
 <audio id="audioPlayer"></audio>
 

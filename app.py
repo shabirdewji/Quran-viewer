@@ -538,6 +538,27 @@ def get_surah_summary():
         "text": row["text"] if row else ""
     })
     
+@app.route("/update_surah_summary", methods=["POST"])
+def update_surah_summary():
+    data = request.json
+    surah = int(data["surah"])
+    text = data["text"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE surah
+        SET text = ?
+        WHERE id = ?
+    """, (text, surah))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "ok"})
+
+    
 @app.route("/get_wiki_link")
 def get_wiki_link():
     surah = int(request.args.get("surah"))
