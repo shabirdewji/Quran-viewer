@@ -520,6 +520,19 @@ function initClickableAyahs() {
     });
 }
 /* =========================================================
+   WKIK
+========================================================= */
+function renderNote(note) {
+    const link = getWikiLink(note.surahName);
+
+    return `
+        <div class="note">
+            <p>${note.text}</p>
+            <a href="${link}" target="_blank">📖 Wikipedia</a>
+        </div>
+    `;
+}
+/* =========================================================
    SUMMARY POPUP
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
@@ -541,6 +554,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+/* =========================================================
+   WIKI
+========================================================= */
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const wikiBtn = document.getElementById("wikiBtn");
+
+    if (wikiBtn) {
+        wikiBtn.addEventListener("click", async () => {
+            const surah = document.getElementById("surahSelect").value;
+
+            const res = await fetch(`/get_wiki_link?surah=${surah}`);
+            const data = await res.json();
+
+            if (data.url) {
+                window.open(data.url, "_blank");
+            } else {
+                console.warn("No wiki link found for this surah");
+            }
+        });
+    }
+});
+
+
 /* =========================================================
    DICTIONARY POPUP
 ========================================================= */

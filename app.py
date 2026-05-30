@@ -538,5 +538,26 @@ def get_surah_summary():
         "text": row["text"] if row else ""
     })
     
+@app.route("/get_wiki_link")
+def get_wiki_link():
+    surah = int(request.args.get("surah"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT url
+        FROM wiki
+        WHERE surah = ?
+        LIMIT 1
+    """, (surah,))
+
+    row = cur.fetchone()
+
+    return jsonify({
+        "url": row["url"] if row else None
+    })
+    
+    
 if __name__ == "__main__":
     app.run(debug=True)
