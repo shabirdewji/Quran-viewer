@@ -77,9 +77,16 @@ html, body {
     margin-left: var(--left-controls-width);
 }
 
-/* TOPBAR */
+/* TOPBAR 
 .topbar {
     flex: 0 0 auto;
+}*/
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: inherit; /* or your theme background color */
 }
 
 /* PAGE */
