@@ -36,6 +36,23 @@ const pageData = window.pageData || null;
 /* =========================================================
    INIT
 ========================================================= */
+function observeLeftControls() {
+    const controls = document.querySelector(".left-controls");
+    if (!controls) return;
+
+    const observer = new MutationObserver(() => {
+        const hidden = controls.classList.contains("hidden");
+
+        document.body.classList.toggle("controls-hidden", hidden);
+    });
+
+    observer.observe(controls, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+}
+
+
 document.addEventListener("DOMContentLoaded", init);
 async function init() {
     if (!pageData) {
@@ -56,6 +73,8 @@ async function init() {
     setupTheme();
     setupControlsAutoHide();
     applyFontSize();
+
+    observeLeftControls();
 
     await loadReadStates(currentSurah);
     console.log("loadReadStates")

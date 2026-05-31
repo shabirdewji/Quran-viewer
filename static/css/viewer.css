@@ -69,6 +69,12 @@ body.light .ayah-card.read {
     opacity: 0.5;
 }
 
+body.controls-hidden {
+    --left-controls-width: 0px;
+}
+
+
+
 
 /* -------------------------------- */
 /* GLOBAL */
@@ -606,7 +612,11 @@ html, body {
 @media (max-width: 480px) {
 
     .left-controls {
-        left: 6px;
+        left: 0px;
+    }
+
+    .main {
+        margin-left: 0;
     }
 
     .ayah {
