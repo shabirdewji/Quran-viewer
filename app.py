@@ -383,7 +383,7 @@ def set_read():
         WHERE surah = ? AND ayah = ?
     """, (surah, ayah))
 
-    print("BEFORE UPDATE ROW:", cur.fetchone())
+    #print("BEFORE UPDATE ROW:", cur.fetchone())
 
     cur = conn.execute("""
         UPDATE quran
@@ -393,7 +393,7 @@ def set_read():
 
     conn.commit()
 
-    print("ROWS UPDATED:", cur.rowcount)
+    #print("ROWS UPDATED:", cur.rowcount)
 
     conn.close()
 

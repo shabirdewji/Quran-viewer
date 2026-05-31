@@ -57,6 +57,10 @@ async function init() {
     setupControlsAutoHide();
     applyFontSize();
 
+    await waitForAyahs();
+    initClickableAyahs();
+    console.log("initClickableAyahs")
+
     await loadReadStates(currentSurah);
     console.log("loadReadStates")
 
@@ -75,22 +79,17 @@ async function init() {
 /* =========================================================
    UI
 ========================================================= */
-/* Updates: current ayah number display, total ayahs display*/
-
 function updateAyahInfo() {
     const current = $("currentAyah");
     const total = $("totalAyahs");
     if (current) current.textContent = currentAyah;
     if (total) total.textContent = surahCounts[currentSurah] || "?";
 }
-/*Initial UI setup: sets total ayahs, forces initial highlight via focusAyah */
-
 function setupUI() {
     const totalEl = $("totalAyahs");
     if (totalEl) totalEl.textContent = surahCounts[currentSurah] || "?";
     focusAyah(currentAyah);
 }
-
 function stripHtml(html) {
     const div = document.createElement("div");
     div.innerHTML = html;
@@ -103,13 +102,11 @@ function setupTheme() {
     const saved = localStorage.getItem("theme") || "dark";
     setTheme(saved);
 }
-
 function setTheme(mode) {
     document.body.classList.remove("light");
     if (mode === "light") document.body.classList.add("light");
     localStorage.setItem("theme", mode);
 }
-
 function toggleTheme() {
     const isLight = document.body.classList.contains("light");
     setTheme(isLight ? "dark" : "light");
@@ -184,13 +181,6 @@ function setupDropdowns() {
 }
 /* =========================================================
    AYAH FOCUS
-    Prevent duplicate updates (lastFocused)
-    Update: currentAyah currentIndex
-    Call:
-        highlightAyah(num)
-        updateAyahInfo()
-    Sync dropdown
-    Save progress
 ========================================================= */
 function focusAyah(num) {
     if (lastFocused === num) return;
@@ -205,9 +195,6 @@ function focusAyah(num) {
     if (select) select.value = num;
     sendProgress();
 }
-/* Remove .active from all ayahs
-      Add .active to current ayah
-   Scroll into view (ONLY during playback):*/
 
 function highlightAyah(num) {
     document.querySelectorAll(".ayah-row").forEach(el => el.classList.remove("active"));
@@ -226,7 +213,6 @@ function setupAudio() {
     if (!audioPlayer) return;
     audioPlayer.addEventListener("ended", handleAudioEnd);
 }
-
 function handleAudioEnd() {
     if (!isPlayingSurah) return;
     currentIndex++;
@@ -294,11 +280,7 @@ async function sendProgress() {
         console.log("Save failed");
     }
 }
-/*
-Remove .active from all ayahs
-   Add .active to current ayah
-Scroll into view (ONLY during playback):
-*/
+
 async function loadProgress() {
     try {
         const res = await fetch("/get_progress");
@@ -327,10 +309,6 @@ function waitForAyahs() {
 }
 /* =========================================================
    READ STATES
-   Marks ayahs as read
-   Fetch backend data
-   Set checkbox state
-   Toggle .read class
 ========================================================= */
 async function loadReadStates(surah) {
     const res = await fetch(`/get_read?surah=${surah}`);
@@ -360,9 +338,6 @@ document.addEventListener("change", async (e) => {
 });
 /* =========================================================
    NOTES
-   Marks which ayahs have notes
-    Fetch notes
-    Toggle .note-dot
 ========================================================= */
 async function loadNoteStates(surah) {
     const res = await fetch(`/get_notes?surah=${surah}`);
@@ -529,6 +504,61 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 2000);
 }
+/* =========================================================
+   CLICKABLE WORDS
+========================================================= */
+function renderAyah(text) {
+    const container = $("ayahText");
+    if (!container) return;
+    const words = text.split(/(\s+)/);
+    container.innerHTML = words.map(w => {
+        if (w.trim() === "") return w;
+        const clean = w.replace(/[.,!?;:"'()]/g, "");
+        return `<span class="word" data-word="${clean}">${w}</span>`;
+    }).join("");
+}
+
+function makeClickable(text) {
+    return text.split(/(\s+)/).map(w => {
+        if (w.trim() === "") return w;
+        const clean = w.replace(/[.,!?;:"'()]/g, "");
+        return `<span class="word" data-word="${clean}">${w}</span>`;
+    }).join("");
+}
+
+function initClickableAyahs() {
+    document.querySelectorAll("[data-ayah]").forEach(el => {
+        if (el.dataset.clickable === "true") return;
+        const ayahText = el.querySelector(".ayah");
+        if (!ayahText) return;
+        ayahText.innerHTML = makeClickable(ayahText.innerText);
+        el.dataset.clickable = "true";
+    });
+}
+
+/* =========================================================
+   SUMMARY POPUP
+
+document.addEventListener("DOMContentLoaded", () => {
+    const summaryBtn = document.getElementById("summaryBtn");
+    const closeBtn = document.getElementById("closeSummary");
+    if (summaryBtn) {
+        summaryBtn.addEventListener("click", async () => {
+            const surah = document.getElementById("surahSelect").value;
+            const res = await fetch(`/get_surah_summary?surah=${surah}`);
+            const data = await res.json();
+            console.log("summery text", data.text)
+            document.getElementById("summaryText").innerText = data.text || "";
+            document.getElementById("summaryPopup").classList.remove("hidden");
+        });
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            document.getElementById("summaryPopup").classList.add("hidden");
+        });
+    }
+});
+========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
     const summaryBtn = document.getElementById("summaryBtn");
@@ -611,8 +641,80 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-
 /* =========================================================
+   DICTIONARY POPUP
+========================================================= */
+document.addEventListener("click", async (e) => {
+
+//    console.log("🟢 CLICK EVENT FIRED");
+    try {
+        console.log("STEP 1: tool-btn check");
+        if (e.target.closest(".tool-btn")) {
+            console.log("❌ Click ignored (tool-btn)");
+            return;
+        }
+//        console.log("STEP 2: word class check");
+        if (!e.target.classList.contains("word")) {
+            console.log("❌ Not a word element");
+            return;
+        }
+//        console.log("STEP 3: word clicked");
+        const word = (e.target.dataset.word || "").toLowerCase().trim();
+//        console.log("STEP 4: extracted word =", word);
+        if (!word) {
+//            console.log("❌ Empty word, stopping");
+            return;
+        }
+//        console.log("STEP 5: getting popup element");
+        const popup = document.getElementById("popup");
+//        console.log("popup element =", popup);
+        if (!popup) {
+            console.error("❌ popup NOT FOUND in DOM");
+            return;
+        }
+//        console.log("STEP 6: clearing timer");
+        clearTimeout(popupTimer);
+//        console.log("STEP 7: showing popup");
+        popup.classList.remove("hidden");
+        popup.innerHTML = "Loading...";
+//        console.log("STEP 8: positioning popup");
+        const rect = e.target.getBoundingClientRect();
+        let left = rect.left + window.scrollX;
+        let top = rect.bottom + window.scrollY + 8;
+//        console.log("raw position:", { left, top });
+        left = Math.min(left, window.innerWidth - 260);
+        popup.style.position = "absolute";
+        popup.style.left = left + "px";
+        popup.style.top = top + "px";
+//        console.log("STEP 9: popup positioned");
+        popupTimer = setTimeout(() => {
+//            console.log("AUTO HIDE popup");
+            popup.classList.add("hidden");
+        }, 5000);
+//        console.log("STEP 10: starting fetch");
+        const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+//        console.log("fetch URL =", url);
+        const res = await fetch(url);
+//        console.log("STEP 11: fetch done, status =", res.status);
+        if (!res.ok) {
+            popup.innerHTML = `No definition found for <b>${word}</b>`;
+            return;
+        }
+//        console.log("STEP 12: parsing JSON");
+        const data = await res.json();
+//        console.log("STEP 13: JSON parsed", data);
+        const entry = data?.[0];
+//        console.log("STEP 14: entry =", entry);
+        const meaning =
+            entry?.meanings?.[0]?.definitions?.[0]?.definition
+            || "No definition";
+//        console.log("STEP 15: setting popup text");
+        popup.innerHTML = `<b>${entry.word}</b><br><br>${meaning}`;
+//        console.log("STEP 16: DONE");
+    } catch (err) {
+//        console.error("🔥 CLICK HANDLER ERROR:", err);
+    }
+});/* =========================================================
    AUTO HIDE CONTROLS
 ========================================================= */
 function setupControlsAutoHide() {
