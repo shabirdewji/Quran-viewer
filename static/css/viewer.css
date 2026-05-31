@@ -608,7 +608,7 @@ html, body {
 /* -------------------------------- */
 /* MOBILE */
 /* -------------------------------- */
-
+/*
 @media (max-width: 480px) {
 
     .left-controls {
@@ -617,6 +617,26 @@ html, body {
 
     .main {
         margin-left: 0;
+    }
+
+    .ayah {
+        font-size: calc(var(--ayah-font-size) - 4px);
+    }
+} */
+ 
+@media (max-width: 480px) {
+    .page {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .reader {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+
+    .main {
+        transform: translateX(-10px);
     }
 
     .ayah {
