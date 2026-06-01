@@ -369,6 +369,7 @@ def get_pin():
     
 @app.route("/set_read", methods=["POST"])
 def set_read():
+    
 
     data = request.get_json()
 
@@ -393,7 +394,7 @@ def set_read():
 
     conn.commit()
 
-    #print("ROWS UPDATED:", cur.rowcount)
+    print("ROWS UPDATED:", cur.rowcount)
 
     conn.close()
 
@@ -401,9 +402,9 @@ def set_read():
 
 @app.route("/get_read")
 def get_read():
-    print("🔥 GET_READ HIT")
+    #print("🔥 GET_READ HIT")
     surah = request.args.get("surah")
-    print("In get_read, surah = ", surah)
+    #print("In get_read, surah = ", surah)
 
     conn = get_db()
     conn.row_factory = sqlite3.Row
@@ -468,7 +469,7 @@ def get_note():
 def get_notes():
 
     surah = int(request.args.get("surah"))
-    print("SURAH REQUESTED:", surah)
+    #print("SURAH REQUESTED:", surah)
     
 
     conn = get_db()
@@ -515,7 +516,7 @@ def save_note():
     
 @app.route("/get_surah_summary")
 def get_surah_summary():
-    print("IN GET_SURA_SUMMARY")
+    #print("IN GET_SURA_SUMMARY")
     surah = request.args.get("surah")
 
     if surah is None:

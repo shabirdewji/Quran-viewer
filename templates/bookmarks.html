@@ -2,21 +2,17 @@
 <html>
 <head>
     <link rel="icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/css/theme.css">
+
     <title>Bookmarks</title>
 
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #111;
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-        }
 
-        .verse {
-            padding: 15px;
-            border-bottom: 1px solid #333;
-        }
+
+.verse {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+}
 
         .row {
             display: flex;
@@ -33,10 +29,9 @@
             overflow: hidden;
         }
 
-        .ref {
-            color: #888;
-            font-size: 13px;
-        }
+.ref {
+    color: var(--muted);
+}
 
         .label-row {
             display: flex;
@@ -44,143 +39,83 @@
             gap: 8px;
         }
 
-        .label {
-            color: #fff;
-        }
-
-        .speaker-btn {
-            background: none;
-            border: none;
-            color: #6aa9ff;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 0;
-        }
+.label {
+    color: var(--text);
+}
 
         .speaker-btn:hover {
             opacity: 0.8;
         }
 
-        .actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-            align-items: center;
-        }
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+}
 
-        .delete-btn {
-            background: #e53935;
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+.delete-btn {
+    background: var(--danger);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
 
-        .open {
-            color: #6aa9ff;
-            text-decoration: none;
-            padding: 6px 10px;
-        }
+.delete-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
 
-        .back-btn {
-            margin-bottom: 20px;
-            padding: 8px 14px;
-            border: none;
-            border-radius: 8px;
-            background: #333;
-            color: white;
-            cursor: pointer;
-        }
-        .bookmark-card {
-            display: grid;
-            grid-template-columns: 120px 1fr 40px 70px 80px;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            border-bottom: 1px solid #333;
-            transition: all 0.25s ease;
-            }
+
+.open {
+    color: var(--accent);
+}
+
+.back-btn {
+    background: var(--card);
+    color: var(--text);
+}
+
+.bookmark-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
 
 
 .bookmark-card.playing {
-    border: 2px solid #6aa9ff;
-    box-shadow: 0 0 20px rgba(106,169,255,0.7);
-    transform: scale(1.03);
-    background: #1c2533;
-    transition: all 0.25s ease;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 20px var(--shadow);
 }
 
-    .col-ref {
-        color: #888;
-        font-size: 13px;
-    }
+.col-ref,
+.card-ref {
+    color: var(--muted);
+}
 
-    .col-label {
-        color: #fff;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+.col-label,
+.card-label {
+    color: var(--text);
+}
 
-    .btn {
-        border: none;
-        padding: 6px 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 13px;
-    }
+.btn {
+    background: var(--card);
+    color: var(--text);
+}
 
-    .btn-open {
-        background: #222;
-        color: #6aa9ff;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-    }
+.btn-open {
+    background: var(--card);
+    color: var(--text);
+}
 
-    .btn-delete {
-        background: #e53935;
-        color: white;
-    }
-
-    .speaker-btn {
-        background: none;
-        border: none;
-        color: #6aa9ff;
-        cursor: pointer;
-        font-size: 16px;
-    }
 
     .bookmark-grid {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 10px;
 }
-
-    .bookmark-card {
-        background: #1a1a1a;
-        border: 1px solid #333;
-        border-radius: 10px;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-height: 50px;
-    }
-
-    .card-ref {
-        color: #888;
-        font-size: 12px;
-    }
-
-    .card-label {
-        color: #fff;
-        font-size: 13px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
 
     .card-actions {
         display: flex;
@@ -189,32 +124,6 @@
         margin-top: auto;
     }
 
-    .speaker-btn {
-        background: none;
-        border: none;
-        color: #6aa9ff;
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    .btn-open, .btn-delete {
-        font-size: 12px;
-        padding: 4px 6px;
-        border-radius: 6px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-open {
-        background: #222;
-        color: #6aa9ff;
-        text-decoration: none;
-    }
-
-    .btn-delete {
-        background: #e53935;
-        color: white;
-    }
 
     </style>
 </head>
@@ -225,37 +134,10 @@
     ← Back to Surah
 </button>
 
-<div id="playerBox"
-    style="
-        position:fixed;
-        bottom:20px;
-        right:20px;
-        width:420px;
-        height:70vh;
-        max-height:800px;
-        background:#1a1a1a;
-        border:2px solid #6aa9ff;
-        border-radius:12px;
-        z-index:999999;
-        overflow-y:auto;
-        padding:14px;
-        display:none;
-        color:white;
-        box-shadow:0 0 25px rgba(0,0,0,0.8);
-    ">
+<div class="player-title"></div>
+<div id="playerBox" class="player-box"></div>
+<div id="playerList"></div>
 
-    <div style="
-        font-size:16px;
-        font-weight:600;
-        margin-bottom:10px;
-        color:#6aa9ff;
-    ">
-        Now Playing
-    </div>
-
-    <div id="playerList"></div>
-
-</div>
 
 
 <h2>Bookmarked Verses</h2>
@@ -269,67 +151,59 @@ let currentHighlightId = null;
 let currentPlaybackToken = 0;
 let currentPlayingCard = null;
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadBookmarks();
-});
 
-function loadBookmarks() {
 
-    fetch("/api/bookmarks")
-        .then(r => r.json())
-        .then(data => {
+document.addEventListener("DOMContentLoaded", setupTheme);
+document.addEventListener("DOMContentLoaded", loadBookmarks);
 
-            const box = document.getElementById("list");
-            box.innerHTML = "";
-
-            (data.bookmarks || []).forEach(v => {
-
-                const div = document.createElement("div");
-                
-
-div.innerHTML = `
-    <div class="bookmark-card"
-        id="card-${v.id}"
-        onclick="playAyah('${v.surah}', '${v.ayah}', '${v.id}')"
-        style="cursor:pointer;">
-
-        <div class="card-ref">
-            ${v.surah}:${v.ayah}
-        </div>
-
-        <div class="card-label">
-            ${v.label || ""}
-        </div>
-    </div>
-`;
-
-                box.appendChild(div);
-            });
-        });
+function setupTheme() {
+    const saved = localStorage.getItem("theme") || "dark";
+    document.body.classList.toggle("light", saved === "light");
 }
 
+function loadBookmarks() {
+    fetch("/api/bookmarks")
+        .then(r => r.json())
+        .then(renderBookmarks);
+}
 
+function renderBookmarks(data) {
 
-//        <div class="card-actions">
+    const box = document.getElementById("list");
+    box.innerHTML = "";
 
-//            <a class="btn-open"
-//                href="/view/${v.surah}/${v.ayah}"
-//                onclick="event.stopPropagation();">
-//                Open
-//            </a>
+    (data.bookmarks || []).forEach(v => {
 
-//            <button class="btn-delete"
-//                onclick="event.stopPropagation(); deleteBookmark(${v.id})">
-//                Del
-//            </button>
+        const card = document.createElement("div");
+        card.className = "bookmark-card";
+        card.id = `card-${v.id}`;
 
-//        </div>
+        card.innerHTML = `
+            <div class="card-ref">${v.surah}:${v.ayah}</div>
+            <div class="card-label">${v.label || ""}</div>
 
+            <div class="card-actions">
+                <button class="btn btn-ghost play-btn">🔊 Play</button>
+                <button class="btn btn-danger delete-btn">Delete</button>
+            </div>
+        `;
 
+        // 🔊 PLAY
+        card.querySelector(".play-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            playAyah(v.surah, v.ayah, v.id);
+        });
 
+        // DELETE
+        card.querySelector(".delete-btn").addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await fetch(`/bookmark/${v.id}`, { method: "DELETE" });
+            loadBookmarks();
+        });
 
-
-
+        box.appendChild(card);
+    });
+}
 
 function playAyah(surah, ayah, cardId) {
 
@@ -377,17 +251,13 @@ async function showPlayerWindow(surah, ayahs) {
     box.style.opacity = "1";
 
     // reset content
+
     box.innerHTML = `
-        <div style="
-            font-size:16px;
-            font-weight:600;
-            margin-bottom:10px;
-            color:#6aa9ff;
-        ">
-            Now Playing
-        </div>
-        <div id="playerList"></div>
-    `;
+    <div class="player-header">
+        Now Playing
+    </div>
+    <div id="playerList"></div>
+`;
 
     const list = document.getElementById("playerList");
 
@@ -396,16 +266,13 @@ async function showPlayerWindow(surah, ayahs) {
         const row = document.createElement("div");
 
         row.id = `play-${a}`;
-        row.style.padding = "10px";
-        row.style.marginBottom = "8px";
-        row.style.borderBottom = "1px solid #333";
-        row.style.color = "#888";
+        row.className = "ayah-row";
 
         row.innerHTML = `
-            <div style="font-size:12px;color:#6aa9ff;margin-bottom:4px;">
+            <div class="ayah-ref">
                 ${surah}:${a}
             </div>
-            <div>Loading...</div>
+            <div class="ayah-text">Loading...</div>
         `;
 
         list.appendChild(row);
@@ -424,19 +291,11 @@ async function showPlayerWindow(surah, ayahs) {
             if (!el) continue;
 
             el.innerHTML = `
-                <div style="font-size:12px;color:#6aa9ff;margin-bottom:6px;">
+                <div class="player-ayah-ref">
                     ${surah}:${a}
                 </div>
 
-                    <div style="
-                        font-size:28px;
-                        line-height:1.9;
-                        text-align:center;
-                        color:#fff;
-                        padding:20px;
-                        max-width:700px;
-                        margin:0 auto;
-                    ">
+                <div class="player-ayah-text">
                     ${data.text || "Not found"}
                 </div>
             `;
@@ -446,8 +305,6 @@ async function showPlayerWindow(surah, ayahs) {
         }
     }
 }
-
-
 
 function playSequentially(surah, ayahs, index, token = currentPlaybackToken) {
 
@@ -506,20 +363,10 @@ function setActiveCard(cardId) {
     }
 }
 
-
-
-
 function goBackToSurah() {
     window.location.href = "/view/1/1";
 }
 
-function deleteBookmark(id) {
-
-    fetch(`/bookmark/${id}`, {
-        method: "DELETE"
-    })
-    .then(() => loadBookmarks());
-}
 
 </script>
 

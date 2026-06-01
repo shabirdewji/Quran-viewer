@@ -43,7 +43,11 @@ function observeLeftControls() {
     const observer = new MutationObserver(() => {
         const hidden = controls.classList.contains("hidden");
 
-        document.body.classList.toggle("controls-hidden", hidden);
+        if (hidden) {
+            document.body.classList.add("controls-hidden");
+        } else {
+            document.body.classList.remove("controls-hidden");
+        }
     });
 
     observer.observe(controls, {
@@ -72,6 +76,10 @@ async function init() {
     setupAudio();
     setupTheme();
     setupControlsAutoHide();
+
+    setupSummary();
+    setupWiki();
+
     applyFontSize();
 
     observeLeftControls();
@@ -224,6 +232,7 @@ function focusAyah(num) {
     if (select) select.value = num;
     sendProgress();
 }
+
 /* Remove .active from all ayahs
       Add .active to current ayah
    Scroll into view (ONLY during playback):*/
@@ -454,28 +463,57 @@ async function loadBookmarks() {
     try {
         const res = await fetch("/api/bookmarks");
         const data = await res.json();
+
         const box = $("list");
         if (!box) return;
+
         box.innerHTML = "";
+
         if (!data.bookmarks || data.bookmarks.length === 0) {
             box.innerHTML = "<p>No bookmarks yet</p>";
             return;
         }
+
         data.bookmarks.forEach(b => {
             const row = document.createElement("div");
             row.className = "verse";
+
             row.innerHTML = `
-                <div class="left">
-                    <div class="ref">Surah ${b.surah}:${b.ayah}</div>
-                    <div class="text">${b.label || "No label"}</div>
-                </div>
-                <div class="actions">
-                    <button onclick="openVerse(${b.surah}, ${b.ayah})">Open</button>
-                    <button class="delete-btn" onclick="deleteBookmark(${b.id})">Delete</button>
+                <div class="row">
+                    <div class="left">
+                        <div class="ref">Surah ${b.surah}:${b.ayah}</div>
+                        <div class="text">${b.label || "No label"}</div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="play-btn">🔊 Play</button>
+                        <button class="open-btn">Open</button>
+                        <button class="delete-btn">Delete</button>
+                    </div>
                 </div>
             `;
+
+            // 🔊 PLAY
+            row.querySelector(".play-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                playSurah(b.surah, b.ayah);
+            });
+
+            // OPEN
+            row.querySelector(".open-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                openVerse(b.surah, b.ayah);
+            });
+
+            // DELETE
+            row.querySelector(".delete-btn").addEventListener("click", (e) => {
+                e.stopPropagation();
+                deleteBookmark(b.id);
+            });
+
             box.appendChild(row);
         });
+
     } catch (err) {
         console.error("BOOKMARK LOAD ERROR:", err);
     }
@@ -548,44 +586,53 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 2000);
 }
-
-document.addEventListener("DOMContentLoaded", () => {
+/* =========================================================
+   SUMMARY
+========================================================= */
+function setupSummary() {
     const summaryBtn = document.getElementById("summaryBtn");
     const closeBtn = document.getElementById("closeSummary");
     const saveBtn = document.getElementById("saveSummary");
 
-    let currentSurah = null;
+    let summarySurah = null;
 
     if (summaryBtn) {
         summaryBtn.addEventListener("click", async () => {
-            currentSurah = document.getElementById("surahSelect").value;
+            summarySurah = document.getElementById("surahSelect").value;
 
-            const res = await fetch(`/get_surah_summary?surah=${currentSurah}`);
+            const res = await fetch(
+                `/get_surah_summary?surah=${summarySurah}`
+            );
+
             const data = await res.json();
 
-            document.getElementById("summaryText").value = data.text || "";
+            document.getElementById("summaryText").value =
+                data.text || "";
 
-            document.getElementById("summaryPopup").classList.remove("hidden");
+            document.getElementById("summaryPopup")
+                .classList.remove("hidden");
         });
     }
 
     if (closeBtn) {
         closeBtn.addEventListener("click", () => {
-            document.getElementById("summaryPopup").classList.add("hidden");
+            document.getElementById("summaryPopup")
+                .classList.add("hidden");
         });
     }
 
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
-            const text = document.getElementById("summaryText").value;
+            const text =
+                document.getElementById("summaryText").value;
 
-            await fetch(`/update_surah_summary`, {
+            await fetch("/update_surah_summary", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    surah: currentSurah,
+                    surah: summarySurah,
                     text: text
                 })
             });
@@ -593,8 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Summary saved");
         });
     }
-});
-
+}
 /* =========================================================
    WIKI
 ========================================================= */
@@ -610,25 +656,29 @@ function renderNote(note) {
     `;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function setupWiki() {
     const wikiBtn = document.getElementById("wikiBtn");
 
-    if (wikiBtn) {
-        wikiBtn.addEventListener("click", async () => {
-            const surah = document.getElementById("surahSelect").value;
+    if (!wikiBtn) return;
 
-            const res = await fetch(`/get_wiki_link?surah=${surah}`);
-            const data = await res.json();
+    wikiBtn.addEventListener("click", async () => {
+        const surah =
+            document.getElementById("surahSelect").value;
 
-            if (data.url) {
-                window.open(data.url, "_blank");
-            } else {
-                console.warn("No wiki link found for this surah");
-            }
-        });
-    }
-});
+        const res =
+            await fetch(`/get_wiki_link?surah=${surah}`);
 
+        const data = await res.json();
+
+        if (data.url) {
+            window.open(data.url, "_blank");
+        } else {
+            console.warn(
+                "No wiki link found for this surah"
+            );
+        }
+    });
+}
 
 
 /* =========================================================
