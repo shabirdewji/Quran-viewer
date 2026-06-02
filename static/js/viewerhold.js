@@ -1,8 +1,7 @@
 /* =========================================================
    SAFE HELPERS
 ========================================================= */
-
-console.log("NAV HANDLER FILE LOADED");
+console.log("Hello Shabir")
 let lastFocused = null;
 let popupTimer = null;
 let controlsTimer = null;
@@ -12,8 +11,12 @@ localStorage.setItem = function (key, value) {
     console.trace("🧨 localStorage.setItem CALLED:", key, value);
     originalSetItem.apply(this, arguments);
 };
-
-
+const $ = (id) => document.getElementById(id);
+function bind(id, event, fn) {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener(event, fn);
+}
 /* =========================================================
    STATE
 ========================================================= */
@@ -55,63 +58,47 @@ function observeLeftControls() {
 
 
 document.addEventListener("DOMContentLoaded", init);
-
 async function init() {
     if (!pageData) {
         console.warn("pageData missing");
         return;
     }
-
     console.log("INIT START");
-
-    await setupApp();
-    await hydrateApp();
-    await postRender();
-
-    console.log("INIT DONE");
-}
-async function setupApp() {
     currentSurah = pageData.surah;
     currentAyah = pageData.ayah;
     currentIndex = currentAyah - 1;
-
     audioPlayer = $("audioPlayer");
 
+    updateAyahInfo();
     setupUI();
-//    setupNavigation();
+    setupNavigation();
     setupDropdowns();
     setupAudio();
     setupTheme();
     setupControlsAutoHide();
+
     setupSummary();
     setupWiki();
 
-    observeLeftControls();
     applyFontSize();
-    updateAyahInfo();
-}
-async function hydrateApp() {
+
+    observeLeftControls();
+
     await loadReadStates(currentSurah);
+    console.log("loadReadStates")
+
     await waitForAyahs();
     await loadNoteStates(currentSurah);
+    console.log("loadNoteStates")
+
     await loadBookmarks();
+    console.log("loadBookmarks")
 
-    // IMPORTANT: only override progress AFTER initial render is stable
-    const progress = await loadProgress();
-    if (progress) {
-        currentSurah = progress.surah;
-        currentAyah = progress.ayah;
-        currentIndex = currentAyah - 1;
-    }
+    await loadProgress();
+    console.log("loadProgress")
+
+    console.log("INIT DONE");
 }
-async function postRender() {
-    focusAyah(currentSurah, currentAyah);
-
-    requestAnimationFrame(() => {
-        updateAyahInfo();
-    });
-}
-
 /* =========================================================
    UI
 ========================================================= */
@@ -124,17 +111,11 @@ function updateAyahInfo() {
     if (total) total.textContent = surahCounts[currentSurah] || "?";
 }
 /*Initial UI setup: sets total ayahs, forces initial highlight via focusAyah */
-/*
+
 function setupUI() {
     const totalEl = $("totalAyahs");
     if (totalEl) totalEl.textContent = surahCounts[currentSurah] || "?";
     focusAyah(currentAyah);
-}*/
-function setupUI() {
-    const totalEl = $("totalAyahs");
-    if (totalEl) totalEl.textContent = surahCounts[currentSurah] || "?";
-
-    focusAyah(currentSurah, currentAyah);
 }
 
 function stripHtml(html) {
@@ -177,20 +158,12 @@ function changeFontSize(amount) {
 }
 /* =========================================================
    NAVIGATION
-========================================================= 
+========================================================= */
 function setupNavigation() {
-    console.log("setupNavigation RUNNING");
-
-    console.log("prev:", $("prevBtn"));
-    console.log("next:", $("nextBtn"));
-
     bind("nextBtn", "click", goNext);
     bind("prevBtn", "click", goPrev);
 }
-*/
-
 function goNext() {
-    console.log("NEXT CLICK:", currentSurah, currentAyah);
     let s = currentSurah;
     let a = currentAyah;
     const max = surahCounts[s] || 0;
@@ -203,7 +176,6 @@ function goNext() {
     window.location.href = `/view/${s}/${a}`;
 }
 function goPrev() {
-    console.log("PREV CLICK:", currentSurah, currentAyah);
     let s = currentSurah;
     let a = currentAyah;
     a--;
@@ -214,20 +186,6 @@ function goPrev() {
     }
     window.location.href = `/view/${s}/${a}`;
 }
-
-document.addEventListener("click", (e) => {
-    if (e.target.closest("#nextBtn")) {
-        console.log("next clicked");
-        goNext();
-    }
-
-    if (e.target.closest("#prevBtn")) {
-        console.log("prev clicked");
-        goPrev();
-    }
-});
-
-
 /* =========================================================
    DROPDOWNS
 ========================================================= */
@@ -260,7 +218,7 @@ function setupDropdowns() {
         updateAyahInfo()
     Sync dropdown
     Save progress
-
+========================================================= */
 function focusAyah(num) {
     if (lastFocused === num) return;
     lastFocused = num;
@@ -274,64 +232,20 @@ function focusAyah(num) {
     if (select) select.value = num;
     sendProgress();
 }
-========================================================= */
-
-function focusAyah(surah, ayah) {
-    if (lastFocused === `${surah}-${ayah}`) return;
-    lastFocused = `${surah}-${ayah}`;
-    currentSurah = surah;
-    currentAyah = ayah;
-
-    highlightAyah(surah, ayah,true);
-    updateAyahInfo();
-
-    const select = $("ayahSelect");
-    if (select) select.value = ayah;
-    sendProgress();
-}
 
 /* Remove .active from all ayahs
       Add .active to current ayah
-   Scroll into view (ONLY during playback):
+   Scroll into view (ONLY during playback):*/
 
 function highlightAyah(num) {
     document.querySelectorAll(".ayah-row").forEach(el => el.classList.remove("active"));
     const el = $("ayah-" + num);
     if (!el) return;
     el.classList.add("active");
+
     if (!isPlayingSurah) return;
+
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-}*/
-/*
-function highlightAyah(surah, ayah) {
-    document.querySelectorAll(".ayah-row")
-        .forEach(el => el.classList.remove("active"));
-    const el = document.getElementById(`ayah-${surah}-${ayah}`);
-    if (!el) return;
-    el.classList.add("active");
-    if (!isPlayingSurah) return;
-    el.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
-*/
-
-function highlightAyah(surah, ayah, scroll = false) {
-    document.querySelectorAll(".ayah-row")
-        .forEach(el => el.classList.remove("active"));
-
-    const el = document.getElementById(`ayah-${surah}-${ayah}`);
-    if (!el) return;
-
-    el.classList.add("active");
-
-    if (scroll) {
-        el.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-    }
 }
 /* =========================================================
    AUDIO
@@ -370,7 +284,6 @@ function playSurah() {
     playNextInSurah();
 }
 
-/*
 function playNextInSurah() {
     if (!isPlayingSurah) return;
     const ayahNum = currentIndex + 1;
@@ -385,29 +298,6 @@ function playNextInSurah() {
         isPlayingSurah = false;
     });
 }
-*/
-
-function playNextInSurah() {
-    if (!isPlayingSurah) return;
-
-    const ayahNum = currentIndex + 1;
-
-    if (!surahQueue[currentIndex]) {
-        isPlayingSurah = false;
-        return;
-    }
-
-    focusAyah(currentSurah, ayahNum);
-
-    audioPlayer.src = surahQueue[currentIndex];
-
-    audioPlayer.play().catch(err => {
-        console.log(err);
-        isPlayingSurah = false;
-    });
-}
-
-
 
 function togglePause() {
     if (!audioPlayer) return;
@@ -437,67 +327,15 @@ Remove .active from all ayahs
    Add .active to current ayah
 Scroll into view (ONLY during playback):
 */
-/*
 async function loadProgress() {
     try {
         const res = await fetch("/get_progress");
         const data = await res.json();
-
         currentSurah = data.surah;
         currentAyah = data.ayah;
-
-        setupDropdowns();
-
-        await loadReadStates(currentSurah);
-
-        // 🔥 CRITICAL: ensure DOM exists before scroll
-        await waitForAyahs();
-
-        requestAnimationFrame(() => {
-            focusAyah(currentSurah, currentAyah);
-        });
-
-    } catch (err) {
-        console.error("LOAD PROGRESS ERROR:", err);
-    }
-}
-*/
-async function loadProgress() {
-    try {
-        const res = await fetch("/get_progress");
-        const data = await res.json();
-
-        currentSurah = data.surah;
-        currentAyah = data.ayah;
-
+        focusAyah(currentAyah);
         setupDropdowns();
         await loadReadStates(currentSurah);
-        await waitForAyahs();
-
-        // IMPORTANT: trigger native browser anchor scroll first
-        const id = `ayah-${currentSurah}-${currentAyah}`;
-        
-        const el = document.getElementById(id);
-
-        if (el) {
-            el.scrollIntoView({
-                behavior: "auto",
-                block: "center"
-            });
-        }
-
-        focusAyah(currentSurah, currentAyah);
-
-        // then stabilize + apply highlight
-        requestAnimationFrame(() => {
-            const el = document.getElementById(id);
-            if (!el) return;
-
-            el.classList.add("active");
-
-            updateAyahInfo();
-        });
-
     } catch (err) {
         console.error("LOAD PROGRESS ERROR:", err);
     }
@@ -618,9 +456,6 @@ document.addEventListener("click", async (e) => {
         return;
     }
 });
-
-
-
 /* =========================================================
    BOOKMARKS
 ========================================================= */
@@ -724,58 +559,33 @@ function pinAyah() {
     });
 }
 
-function waitForElement(id, timeout = 3000) {
-    return new Promise(resolve => {
-        const start = Date.now();
-
-        const check = () => {
-            const el = document.getElementById(id);
-
-            if (el) return resolve(el);
-
-            if (Date.now() - start > timeout) {
-                return resolve(null);
-            }
-
-            requestAnimationFrame(check);
-        };
-
-        check();
-    });
-}
-
 async function goContinue() {
     const res = await fetch("/pin");
     const pin = await res.json();
-    console.log("PIN FROM SERVER:", pin);
     if (!pin || !pin.surah || !pin.ayah) return;
     goToAyah(pin.surah, pin.ayah);
 }
 
-window.goToAyah = function (surah, ayah) {
-    window.location.href = `/view/${surah}/${ayah}#ayah-${surah}-${ayah}`;
-};
-
-window.addEventListener("DOMContentLoaded", async () => {
-const id = window.location.hash.replace("#", "");
-if (!id) return;
-console.log("scroll target:", id);
-const el = document.getElementById(id);
-console.log("element found:", !!el);
-if (el) {
-    el.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
-});
-
-/*
 async function loadPins() {
     const res = await fetch("/pins");
     pinsCache = await res.json();
 }
-*/
+
+function goToAyah(surah, ayah) {
+//    window.location.href = `/view/${surah}/${ayah}`;
+    window.location.href = `/view/${surah}/${ayah}#ayah-${surah}-${ayah}`;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const id = window.location.hash.replace("#", "");
+    const el = document.getElementById(id);
+    console.log("scroll target in listener:", id);
+
+    if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+});
+
 /* =========================================================
    TOAST
 ========================================================= */
@@ -883,8 +693,6 @@ function setupWiki() {
         }
     });
 }
-
-const $ = (id) => document.getElementById(id);
 
 
 /* =========================================================

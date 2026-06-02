@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="icon" href="/static/favicon.ico">
-<link rel="stylesheet" href="/static/css/theme.css">
-<title>Bookmarks</title>
-<style>
+    <link rel="icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/css/theme.css">
+
+    <title>Bookmarks</title>
+
+    <style>
+
+
 .verse {
     padding: 15px;
     border-bottom: 1px solid var(--border);
 }
 
-.row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-}
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
 
-.left {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    overflow: hidden;
-}
+        .left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow: hidden;
+        }
 
 .ref {
     color: var(--muted);
@@ -39,9 +43,9 @@
     color: var(--text);
 }
 
-.speaker-btn:hover {
-    opacity: 0.8;
-}
+        .speaker-btn:hover {
+            opacity: 0.8;
+        }
 
 .actions {
     display: flex;
@@ -49,6 +53,21 @@
     flex-shrink: 0;
     align-items: center;
 }
+
+.delete-btn {
+    background: var(--danger);
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
 
 .open {
     color: var(--accent);
@@ -91,20 +110,22 @@
     color: var(--text);
 }
 
-.bookmark-grid {
-display: grid;
-grid-template-columns: repeat(8, minmax(0, 1fr));
-gap: 10px;
+
+    .bookmark-grid {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 10px;
 }
 
-.card-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-}
+    .card-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
 
-</style>
+
+    </style>
 </head>
 
 <body>
@@ -162,9 +183,8 @@ function renderBookmarks(data) {
             <div class="card-label">${v.label || ""}</div>
 
             <div class="card-actions">
-                <button class="btn btn-ghost play-btn">🔊</button>
-                
-                <button class="delete-btn" aria-label="Delete bookmark">🗑️</button>
+                <button class="btn btn-ghost play-btn">🔊 Play</button>
+                <button class="delete-btn">Delete</button>
             </div>
         `;
 
@@ -304,19 +324,20 @@ function playSequentially(surah, ayahs, index, token = currentPlaybackToken) {
     const ayah = ayahs[index];
 
     // 🔥 optional: update player window highlight too
-    document.querySelectorAll("#playerBox .ayah-row")
+document
+    .querySelectorAll("#playerBox .ayah-row")
     .forEach(r => r.classList.remove("active"));
 
-        const el = document.getElementById(`play-${ayah}`);
+const el = document.getElementById(`play-${ayah}`);
 
-        if (el) {
-            el.classList.add("active");
+if (el) {
+    el.classList.add("active");
 
-            el.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
+    el.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+}
 
     const surahPadded = String(surah).padStart(3, '0');
     const ayahPadded = String(ayah).padStart(3, '0');

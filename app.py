@@ -195,19 +195,14 @@ def view_surah(surah, ayah):
 
     return render_template(
         "ayah.html",
-
         # ✅ FULL LIST FOR LOOP
         verses=verses,
-
         # ✅ CURRENT VERSE (for highlighting / JS)
         verse=verses[ayah - 1],
-
         current_surah=surah,
         current_ayah=ayah,
-
         surah_counts=get_surah_counts(),
         surah_names=SURAH_NAMES,
-
         next_url=f"/view/{surah}/{ayah+1}",
         prev_url=f"/view/{surah}/{ayah-1 if ayah > 1 else 1}"
     )
@@ -293,7 +288,7 @@ def get_bookmarks():
     cur.execute("""
         SELECT id, surah, ayah, label
         FROM bookmarks
-        ORDER BY id ASC
+        ORDER BY surah ASC
     """)
 
     rows = cur.fetchall()

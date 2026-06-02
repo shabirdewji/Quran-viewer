@@ -3,8 +3,8 @@
 ========================================================= */
 
 :root {
+    --left-controls-width: 160px;
     --bg: #111;
-    --surface: #1a1a1a;
     --text: #fff;
     --muted: #888;
     --border: #333;
@@ -14,11 +14,26 @@
 
     --danger: #e53935;
     --shadow: rgba(106, 169, 255, 0.25);
+
+    --popup-bg: #1a1a1a;
+    --popup-text: #ffffff;
+
+    --button-bg: #333;
+    --button-text: #fff;
+
+    --surface: #1a1a1a;
+    --surface-2: #1c2533;
+
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: rgba(0, 0, 0, 0.5);
+    --icon-color: #fff;
 }
 
 body.light {
     --bg: #fff;
     --surface: #f6f6f6;
+    --surface-2: #eaf1ff;
     --text: #111;
     --muted: #666;
     --border: #e5e5e5;
@@ -27,6 +42,17 @@ body.light {
     --active: #1d4ed8;
 
     --danger: #dc2626;
+
+    --popup-bg: #ffffff;
+    --popup-text: #111111;
+
+    --button-bg: #e5e7eb;
+    --button-text: #111;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-text: inherit;
+    --glass-shadow: rgba(0, 0, 0, 0.25);
+    --icon-color: #111;
 }
 
 /* =========================================================
@@ -59,6 +85,7 @@ body:not(.light) .ayah-row.active .ayah {
 body.light .ayah-row.active .ayah {
     color: #1d4ed8;
 }
+
 /* =========================================================
    UTILITY CLASSES
 ========================================================= */
@@ -112,7 +139,21 @@ body.light .ayah-row.active .ayah {
 
 .btn-danger {
     background: var(--danger);
-    color: white;
+    color: #fff;
+    border: none;
+
+    padding: 6px 10px;
+    border-radius: 8px;
+
+    cursor: pointer;
+    font-size: 13px;
+
+    transition: 0.2s ease;
+}
+
+.btn-danger:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
 }
 
 /* bookmark highlight */
@@ -136,13 +177,11 @@ body.light .ayah-row.active .ayah {
     color: var(--muted);
 }
 
-
 .ayah-ref {
     font-size: 12px;
     color: var(--accent);
     margin-bottom: 4px;
 }
-
 
 .ayah-text {
     color: var(--text);
@@ -203,4 +242,18 @@ body.light .ayah-row.active .ayah {
 }
 .play-btn {
     color: var(--accent);
+}
+
+.delete-btn {
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+}
+
+.delete-btn:hover {
+    background: rgba(229, 57, 53, 0.15);
 }
