@@ -35,7 +35,6 @@
     </div>
     <div class="tool-group compact">
         <button class="tool-btn" onclick="changeFontSize(-2)">A−</button>
-        
         <button class="tool-btn" onclick="event.stopPropagation(); changeFontSize(2)">A+</button>
         <button class="tool-btn" onclick="toggleTheme()">🌓 Dark/Light</button>
     </div>
@@ -45,102 +44,86 @@
         <button class="tool-btn" onclick="togglePause()">⏸ Pause</button>
     </div>
     <div id="pinStatus"></div>
-<!--
-        <button onclick="goPrevAyah()">◀</button>
-        <button onclick="goNextAyah()">▶</button>
--->
     </div>
-    
 
-    <!-- MAIN -->
+<!-- TOP BAR -->
+    <div class="topbar">
+
+        <div class="search-bar">
+
+            <!-- SURAH DROPDOWN -->
+            <select id="surahSelect">
+                {% for num, name in surah_names.items() %}
+                    <option value="{{ num }}"
+                        {% if num == surah %}selected{% endif %}>
+                        {{ num }} - {{ name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button id="prevSurahBtn" class="summary-btn">Prev</button>
+            <button id="nextSurahBtn" class="summary-btn">Next</button>
+
+            <div class="surah-search" id="surahSearchBox">
+                <input id="surahSearchInput" class="summary-btn" type="text" placeholder="Search surah..." autocomplete="off">
+                <div id="surahSearchResults" class="search-results"></div>
+            </div>
+
+            <button id="summaryBtn" class="summary-btn">
+            Summary
+            </button>
+
+            <button id="markReadBtn" class="summary-btn">Mark Read</button>
+
+            <!-- AYAH DROPDOWN -->
+            <select id="ayahSelect"></select>
+
+            <!-- CONTINUE -->
+            <button class="summary-btn"" onclick="goContinue()">
+                Continue
+            </button>
+        </div>
+    </div>
+
     <div class="main">
 
-        <!-- TOP BAR -->
-        <div class="topbar">
-
-            <div class="surah">
-                {{ surah_names[surah] }}
-            </div>
-
-            <div class="search-bar">
-
-                <!-- SURAH DROPDOWN -->
-                <select id="surahSelect">
-                    {% for num, name in surah_names.items() %}
-                        <option value="{{ num }}"
-                            {% if num == surah %}selected{% endif %}>
-                            {{ num }} - {{ name }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <button id="summaryBtn" class="summary-btn">
-                Summary
-                </button>
-                <!-- AYAH DROPDOWN -->
-                <select id="ayahSelect"></select>
-
-                <!-- AYAH INFO -->
-                <div class="ayah-info">
-                    Ayah
-                    <span id="currentAyah">1</span>
-                    /
-                    <span id="totalAyahs">?</span>
-                </div>
-
-                <!-- CONTINUE -->
-                <button class="summary-btn"" onclick="goContinue()">
-                    Continue
-                </button>
-            </div>
-        </div>
-
-        <!-- VIEW -->
-        <div class="page">
-
-
+<!-- VIEW -->
+    <div class="page">
         <div class="reader">
             {% for verse in verses %}
             <div class="ayah-row" id="ayah-{{ current_surah }}-{{ verse.ayah }}" data-ayah="{{ verse.ayah }}">
-            <div class="ayah-card">
+                <div class="ayah-card">
 
-                <input type="checkbox"
-                    class="read-toggle"
-                    {% if verse.is_read %}checked{% endif %}>
+                    <input type="checkbox"
+                        class="read-toggle"
+                        {% if verse.is_read %}checked{% endif %}>
 
-                <div class="note-dot"></div>
+                    <div class="note-dot"></div>
 
-                <div class="ayah-number">
-                    {{ verse.ayah }}
+                    <div class="ayah-number">
+                        {{ verse.ayah }}
+                    </div>
+
+                    <div class="ayah" data-ayah="{{ verse.ayah }}">
+                        {{ verse.text }}
+                    </div>
+
                 </div>
-
-                <div class="ayah">
-                    {{ verse.text }}
-                </div>
-
-            </div>
                 <div class="note-popup hidden">
                     <div class="note-header">
-                        Notes
+                    Notes. Write your reflection here...
                     </div>
-                        <textarea class="note-text"
-                                placeholder="Write your reflection here..."></textarea>
-
-                    <div class="note-preview"></div>
-
+                    <textarea class="note-text"></textarea>
                     <div class="note-actions">
                         <button class="save-note">Save</button>
                         <button class="close-note">Close</button>
                     </div>
-
-                    <div id="ayahText"></div>
-
+                    <div class="ayahText"></div>
                 </div>
             </div>
             {% endfor %}
         </div>
-
-        </div>
+    </div>
     </div>
 </div>
 
@@ -160,9 +143,18 @@
 <div id="summaryPopup" class="popup-content hidden">
     <textarea id="summaryText"></textarea>
     <div class="summary-actions">
-        <button id="saveSummary">💾 Save</button>
-        <button id="wikiBtn">📖 Wiki</button>
-        <button id="closeSummary">Close</button>
+        
+        <button class="summary-btn externalLink"
+                data-url="https://quranyusufali.com/{surah}/">
+            Yusuf Ali
+        </button>
+
+        <button class="summary-btn wikiLink">
+            📖 Wiki
+        </button>
+
+        <button class="summary-btn" id="saveSummary">💾 Save</button>
+        <button class="summary-btn" id="closeSummary">Close</button>
     </div>
 </div>
 <div id="popup" class="popup hidden"></div>
@@ -185,6 +177,13 @@ window.pageData = {
 window.surahCounts =
     {{ surah_counts | tojson }};
 
+</script>
+
+<script>
+const surahs = Object.entries({{ surah_names | tojson }}).map(([num, name]) => ({
+    number: parseInt(num),
+    name: name
+}));
 </script>
 
 <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>

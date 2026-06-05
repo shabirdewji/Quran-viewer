@@ -252,6 +252,23 @@ def get_progress():
         "ayah": 1
     })
 
+@app.route("/mark_read/<int:surah>", methods=["POST"])
+def mark_read(surah):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE quran
+        SET is_read = 1
+        WHERE surah = ?
+    """, (surah,))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "ok"}
+
 
 @app.route("/bookmark", methods=["POST"])
 def add_bookmark():
@@ -365,34 +382,24 @@ def get_pin():
 @app.route("/set_read", methods=["POST"])
 def set_read():
     
-
     data = request.get_json()
-
     ayah = int(data["ayah"])
     surah = int(data["surah"])
     is_read = 1 if data["is_read"] else 0
-
     conn = get_db()
-    
     cur = conn.execute("""
     SELECT is_read FROM quran
         WHERE surah = ? AND ayah = ?
     """, (surah, ayah))
-
     #print("BEFORE UPDATE ROW:", cur.fetchone())
-
     cur = conn.execute("""
         UPDATE quran
         SET is_read = ?
         WHERE surah = ? AND ayah = ?
     """, (is_read, surah, ayah))
-
     conn.commit()
-
     print("ROWS UPDATED:", cur.rowcount)
-
     conn.close()
-
     return {"ok": True, "updated": cur.rowcount}
 
 @app.route("/get_read")
@@ -554,7 +561,64 @@ def update_surah_summary():
 
     return jsonify({"status": "ok"})
 
+
+
+@app.route("/api/highlight", methods=["POST"])
+def toggle_highlight():
     
+    print("REQUEST JSON:", request.json)
+    
+    data = request.json
+    surah = data["surah"]
+    ayah = data["ayah"]
+    word = data["word_index"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # check if exists
+    cur.execute("""
+        SELECT id FROM highlights
+        WHERE surah=? AND ayah=? AND word_index=?
+    """, (surah, ayah, word))
+
+    row = cur.fetchone()
+
+    if row:
+        # remove highlight
+        cur.execute("DELETE FROM highlights WHERE id=?", (row["id"],))
+        conn.commit()
+        return {"status": "removed"}
+
+    else:
+        # add highlight
+        cur.execute("""
+            INSERT INTO highlights (surah, ayah, word_index)
+            VALUES (?, ?, ?)
+        """, (surah, ayah, word))
+        conn.commit()
+        return {"status": "added"}
+    
+@app.route("/api/highlights")
+def get_highlights():
+    surah = request.args.get("surah")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT ayah, word_index
+        FROM highlights
+        WHERE surah=?
+    """, (surah,))
+
+    rows = cur.fetchall()
+
+    return jsonify([
+        {"ayah": r["ayah"], "word_index": r["word_index"]}
+        for r in rows
+    ])
+        
 @app.route("/get_wiki_link")
 def get_wiki_link():
     surah = int(request.args.get("surah"))

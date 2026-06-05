@@ -56,6 +56,7 @@ function observeLeftControls() {
 
 document.addEventListener("DOMContentLoaded", init);
 
+
 async function init() {
     if (!pageData) {
         console.warn("pageData missing");
@@ -78,13 +79,12 @@ async function setupApp() {
     audioPlayer = $("audioPlayer");
 
     setupUI();
-//    setupNavigation();
     setupDropdowns();
     setupAudio();
     setupTheme();
     setupControlsAutoHide();
     setupSummary();
-    setupWiki();
+    setupLinks();
 
     observeLeftControls();
     applyFontSize();
@@ -105,8 +105,11 @@ async function hydrateApp() {
     }
 }
 async function postRender() {
-    focusAyah(currentSurah, currentAyah);
+    await waitForAyahs();   // 1. render .ayah text
+    wrapWords();         // 2. convert text → spans
+    await loadHighlights(); // 3. apply DB highlights
 
+    focusAyah(currentSurah, currentAyah); // 4. now safe
     requestAnimationFrame(() => {
         updateAyahInfo();
     });
@@ -177,17 +180,7 @@ function changeFontSize(amount) {
 }
 /* =========================================================
    NAVIGATION
-========================================================= 
-function setupNavigation() {
-    console.log("setupNavigation RUNNING");
-
-    console.log("prev:", $("prevBtn"));
-    console.log("next:", $("nextBtn"));
-
-    bind("nextBtn", "click", goNext);
-    bind("prevBtn", "click", goPrev);
-}
-*/
+=========================================================*/
 
 function goNext() {
     console.log("NEXT CLICK:", currentSurah, currentAyah);
@@ -226,7 +219,88 @@ document.addEventListener("click", (e) => {
         goPrev();
     }
 });
+/* =========================================================
+   HIGHLIGHTER
+========================================================= */
+async function saveHighlight(el) {
+  const ayahEl = el.closest(".ayah");
 
+  if (!ayahEl || !ayahEl.dataset?.ayah) {
+    console.error("Invalid ayah element:", ayahEl);
+    return;
+  }
+
+  const ayah = parseInt(ayahEl.dataset.ayah, 10);
+  const word = parseInt(el.dataset.word, 10);
+
+  if (Number.isNaN(ayah) || Number.isNaN(word)) {
+    console.error("Invalid highlight payload:", { ayah, word });
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/highlight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        surah: currentSurah,
+        ayah,
+        word_index: word
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Server error:", err);
+      return;
+    }
+
+    const data = await res.json();
+
+    el.classList.toggle("highlighted", data.status === "added");
+  } catch (err) {
+    console.error("Network error:", err);
+  }
+}
+
+/* Load db. */
+
+async function loadHighlights() {
+  const res = await fetch(`/api/highlights?surah=${currentSurah}`);
+  const data = await res.json();
+
+  data.forEach(({ ayah, word_index }) => {
+    const ayahEl = document.querySelector(
+      `.ayah[data-ayah="${ayah}"]`
+    );
+
+    if (!ayahEl) {
+      console.warn("Missing ayah in DOM:", ayah);
+      return;
+    }
+
+    const wordEl = ayahEl.querySelector(
+      `.word[data-word="${word_index}"]`
+    );
+
+    if (!wordEl) {
+      console.warn("Missing word:", ayah, word_index);
+      return;
+    }
+
+    wordEl.classList.add("highlighted");
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("word")) return;
+
+  const el = e.target;
+
+  el.classList.toggle("highlighted");
+
+  saveHighlight(el);
+});
 
 /* =========================================================
    DROPDOWNS
@@ -244,7 +318,7 @@ function setupDropdowns() {
     for (let i = 1; i <= total; i++) {
         const opt = document.createElement("option");
         opt.value = i;
-        opt.textContent = "Ayah " + i;
+        opt.textContent = "Ayah " + i +"/"+ total;
         ayahSelect.appendChild(opt);
     }
     ayahSelect.value = String(currentAyah);
@@ -260,20 +334,6 @@ function setupDropdowns() {
         updateAyahInfo()
     Sync dropdown
     Save progress
-
-function focusAyah(num) {
-    if (lastFocused === num) return;
-    lastFocused = num;
-    currentAyah = num;
-    currentIndex = num - 1;
-
-    highlightAyah(num);
-    updateAyahInfo();
-
-    const select = $("ayahSelect");
-    if (select) select.value = num;
-    sendProgress();
-}
 ========================================================= */
 
 function focusAyah(surah, ayah) {
@@ -293,28 +353,6 @@ function focusAyah(surah, ayah) {
 /* Remove .active from all ayahs
       Add .active to current ayah
    Scroll into view (ONLY during playback):
-
-function highlightAyah(num) {
-    document.querySelectorAll(".ayah-row").forEach(el => el.classList.remove("active"));
-    const el = $("ayah-" + num);
-    if (!el) return;
-    el.classList.add("active");
-    if (!isPlayingSurah) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-}*/
-/*
-function highlightAyah(surah, ayah) {
-    document.querySelectorAll(".ayah-row")
-        .forEach(el => el.classList.remove("active"));
-    const el = document.getElementById(`ayah-${surah}-${ayah}`);
-    if (!el) return;
-    el.classList.add("active");
-    if (!isPlayingSurah) return;
-    el.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
 */
 
 function highlightAyah(surah, ayah, scroll = false) {
@@ -332,6 +370,30 @@ function highlightAyah(surah, ayah, scroll = false) {
             block: "center"
         });
     }
+}
+/* =========================================================
+   HIGHLIGHTER
+========================================================= */
+let wrapped = false;
+
+function wrapWords() {
+  if (wrapped) return;
+  wrapped = true;
+
+  document.querySelectorAll(".ayah").forEach((ayah) => {
+    const text = ayah.textContent.trim();
+    if (!text) return;
+
+    const words = text.split(/\s+/);
+
+    ayah.innerHTML = words
+      .map((word, i) =>
+        `<span class="word" data-word="${i}">${word}</span>`
+      )
+      .join(" ");
+
+    ayah.dataset.wrapped = "1";
+  });
 }
 /* =========================================================
    AUDIO
@@ -369,23 +431,65 @@ function playSurah() {
     isPlayingSurah = true;
     playNextInSurah();
 }
+/* =========================================================
+   PREV, NEXT & SEARCH
+========================================================= */
 
-/*
-function playNextInSurah() {
-    if (!isPlayingSurah) return;
-    const ayahNum = currentIndex + 1;
-    focusAyah(ayahNum);
-    if (!surahQueue[currentIndex]) {
-        isPlayingSurah = false;
-        return;
+document.getElementById("prevSurahBtn")
+    .addEventListener("click", goToPreviousSurah);
+
+document.getElementById("nextSurahBtn")
+    .addEventListener("click", goToNextSurah);
+
+//document.getElementById("searchSurahBtn")
+//    .addEventListener("click", searchSurah);
+
+const searchBox = document.getElementById("surahSearchBox");
+const searchInput = document.getElementById("surahSearchInput");
+const resultsBox = document.getElementById("surahSearchResults");
+
+function goToPreviousSurah() {
+    if (currentSurah > 1) {
+        window.location.href = `/view/${currentSurah - 1}/1`;
     }
-    audioPlayer.src = surahQueue[currentIndex];
-    audioPlayer.play().catch(err => {
-        console.log(err);
-        isPlayingSurah = false;
-    });
 }
-*/
+
+function goToNextSurah() {
+    if (currentSurah < 114) {
+        window.location.href = `/view/${currentSurah + 1}/1`;
+    }
+}
+
+function searchSurah() {
+    const query = prompt("Search Surah:");
+
+    if (!query) return;
+
+    const q = query.trim().toLowerCase();
+
+    const match = surahs.find(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.number.toString() === q
+    );
+
+    if (match) {
+        loadSurah(match.number);
+    } else {
+        alert("No matching surah found.");
+    }
+}
+
+
+function toggleSearch() {
+    const isHidden = searchBox.style.display === "none" || !searchBox.style.display;
+
+    if (isHidden) {
+        searchBox.style.display = "block";
+        searchInput.focus();
+    } else {
+        searchBox.style.display = "none";
+    }
+}
 
 function playNextInSurah() {
     if (!isPlayingSurah) return;
@@ -407,13 +511,147 @@ function playNextInSurah() {
     });
 }
 
-
-
 function togglePause() {
     if (!audioPlayer) return;
     if (audioPlayer.paused) audioPlayer.play();
     else audioPlayer.pause();
 }
+
+
+searchInput.addEventListener("input", () => {
+
+    const q = searchInput.value.trim().toLowerCase();
+
+    if (!q) {
+        resultsBox.style.display = "none";
+        return;
+    }
+
+    const matches = surahs
+        .filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            s.number.toString() === q
+        )
+        .slice(0, 15);
+
+    renderResults(matches);
+});
+
+function renderResults(matches) {
+
+    resultsBox.innerHTML = "";
+
+    if (!matches.length) {
+        resultsBox.style.display = "none";
+        return;
+    }
+
+    matches.forEach(surah => {
+
+        const div = document.createElement("div");
+
+        div.className = "search-item";
+        div.textContent = `${surah.number}. ${surah.name}`;
+
+        div.addEventListener("click", () => {
+
+            // ✅ JUMP TO SURAH (ayah 1)
+            window.location.href = `/view/${surah.number}/1`;
+        });
+
+        resultsBox.appendChild(div);
+    });
+
+    resultsBox.style.display = "block";
+}
+document.addEventListener("click", e => {
+
+    if (!e.target.closest(".surah-search")) {
+        resultsBox.style.display = "none";
+    }
+});
+let selectedIndex = -1;
+
+searchInput.addEventListener("keydown", e => {
+
+    const items = [...resultsBox.querySelectorAll(".search-item")];
+
+    if (!items.length) return;
+
+    if (e.key === "ArrowDown") {
+
+        e.preventDefault();
+
+        selectedIndex = Math.min(
+            selectedIndex + 1,
+            items.length - 1
+        );
+
+        updateSelection(items);
+    }
+
+    else if (e.key === "ArrowUp") {
+
+        e.preventDefault();
+
+        selectedIndex = Math.max(
+            selectedIndex - 1,
+            0
+        );
+
+        updateSelection(items);
+    }
+
+    else if (e.key === "Enter") {
+
+        e.preventDefault();
+
+        if (selectedIndex >= 0) {
+            items[selectedIndex].click();
+        }
+    }
+});
+
+function updateSelection(items) {
+
+    items.forEach(i => i.classList.remove("active"));
+
+    if (selectedIndex >= 0) {
+        items[selectedIndex].classList.add("active");
+        items[selectedIndex].scrollIntoView({
+            block: "nearest"
+        });
+    }
+}
+/* =========================================================
+   MARK READ
+========================================================= */
+document.getElementById("markReadBtn")
+    .addEventListener("click", () => {
+
+        document.querySelectorAll(".read-toggle").forEach(cb => {
+            cb.checked = true;
+        });
+
+        document.querySelectorAll(".ayah-card").forEach(card => {
+            card.classList.add("read");
+        });
+    });
+
+document.getElementById("markReadBtn")
+    .addEventListener("click", async () => {
+
+        const res = await fetch(`/mark_read/${currentSurah}`, {
+            method: "POST"
+        });
+
+        const data = await res.json();
+
+        if (data.status === "ok") {
+            markSurahAsReadUI();
+        }
+    });
+
 /* =========================================================
    PROGRESS
 ========================================================= */
@@ -437,31 +675,7 @@ Remove .active from all ayahs
    Add .active to current ayah
 Scroll into view (ONLY during playback):
 */
-/*
-async function loadProgress() {
-    try {
-        const res = await fetch("/get_progress");
-        const data = await res.json();
 
-        currentSurah = data.surah;
-        currentAyah = data.ayah;
-
-        setupDropdowns();
-
-        await loadReadStates(currentSurah);
-
-        // 🔥 CRITICAL: ensure DOM exists before scroll
-        await waitForAyahs();
-
-        requestAnimationFrame(() => {
-            focusAyah(currentSurah, currentAyah);
-        });
-
-    } catch (err) {
-        console.error("LOAD PROGRESS ERROR:", err);
-    }
-}
-*/
 async function loadProgress() {
     try {
         const res = await fetch("/get_progress");
@@ -605,8 +819,10 @@ document.addEventListener("click", async (e) => {
         const surah = currentSurah;
         const ayah = row.dataset.ayah;
         const textarea = row.querySelector(".note-text");
+
         if (!textarea) return;
         const note = textarea.value;
+
         await fetch("/save_note", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -614,12 +830,22 @@ document.addEventListener("click", async (e) => {
         });
         const dot = row.querySelector(".note-dot");
         if (dot) dot.classList.toggle("has-note", note.trim() !== "");
-        console.log("NOTE SAVED");
+
+        // Show feedback
+        const btn = e.target;
+        const originalText = btn.textContent;
+
+        btn.textContent = "✓ Saved";
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }, 1500);
+
         return;
     }
 });
-
-
 
 /* =========================================================
    BOOKMARKS
@@ -704,6 +930,7 @@ window.addBookmark = function () {
         loadBookmarks();
     }).catch(err => console.error("Bookmark failed:", err));
 };
+
 /* =========================================================
    PINS
 ========================================================= */
@@ -770,12 +997,6 @@ if (el) {
 }
 });
 
-/*
-async function loadPins() {
-    const res = await fetch("/pins");
-    pinsCache = await res.json();
-}
-*/
 /* =========================================================
    TOAST
 ========================================================= */
@@ -826,7 +1047,8 @@ function setupSummary() {
     }
 
     if (saveBtn) {
-        saveBtn.addEventListener("click", async () => {
+        saveBtn.addEventListener("click", async (e) => {
+
             const text =
                 document.getElementById("summaryText").value;
 
@@ -841,7 +1063,16 @@ function setupSummary() {
                 })
             });
 
-            alert("Summary saved");
+            const btn = e.target;
+            const originalText = btn.textContent;
+
+            btn.textContent = "✓ Saved";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 1500);
         });
     }
 }
@@ -860,32 +1091,62 @@ function renderNote(note) {
     `;
 }
 
-function setupWiki() {
-    const wikiBtn = document.getElementById("wikiBtn");
+function setupLinks() {
 
-    if (!wikiBtn) return;
+    // Yusuf Ali and other direct URLs
+    document.querySelectorAll(".externalLink")
+        .forEach(btn => {
 
-    wikiBtn.addEventListener("click", async () => {
-        const surah =
-            document.getElementById("surahSelect").value;
+            btn.addEventListener("click", () => {
 
-        const res =
-            await fetch(`/get_wiki_link?surah=${surah}`);
+                const surah =
+                    document.getElementById("surahSelect").value;
 
-        const data = await res.json();
+                const url =
+                    btn.dataset.url.replace(
+                        "{surah}",
+                        surah
+                    );
 
-        if (data.url) {
-            window.open(data.url, "_blank");
-        } else {
-            console.warn(
-                "No wiki link found for this surah"
-            );
-        }
-    });
+                console.log("🔗 Opening:", url);
+
+                window.open(url, "_blank");
+            });
+        });
+
+    // Wiki links from database
+    document.querySelectorAll(".wikiLink")
+        .forEach(btn => {
+
+            btn.addEventListener("click", async () => {
+
+                const surah =
+                    document.getElementById("surahSelect").value;
+
+                console.log("📖 Requesting wiki for surah:", surah);
+
+                const res =
+                    await fetch(
+                        `/get_wiki_link?surah=${surah}`
+                    );
+
+                const data = await res.json();
+
+                console.log("📦 Wiki response:", data);
+
+                if (data.url) {
+                    window.open(data.url, "_blank");
+                } else {
+                    console.warn(
+                        "No wiki URL found for surah",
+                        surah
+                    );
+                }
+            });
+        });
 }
 
 const $ = (id) => document.getElementById(id);
-
 
 /* =========================================================
    AUTO HIDE CONTROLS

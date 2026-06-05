@@ -5,17 +5,26 @@
 <link rel="stylesheet" href="/static/css/theme.css">
 <title>Bookmarks</title>
 <style>
+
+/*
 .verse {
     padding: 15px;
     border-bottom: 1px solid var(--border);
 }
-
+*/
+/*
 .row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
     width: 100%;
+}
+*/
+
+.ayah-row.active {
+    background: yellow !important;
+    border: 2px solid red !important;
 }
 
 .left {
@@ -25,76 +34,103 @@
     overflow: hidden;
 }
 
+/*
 .ref {
     color: var(--muted);
 }
+*/
 
-        .label-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+.label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
+/*
 .label {
     color: var(--text);
 }
+*/
 
 .speaker-btn:hover {
     opacity: 0.8;
 }
-
+/*
 .actions {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
     align-items: center;
 }
+*/
 
+/*
 .open {
     color: var(--accent);
 }
+*/
 
 .back-btn {
     background: var(--card);
     color: var(--text);
 }
 
-.bookmark-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-}
-
-
+/*
 .bookmark-card.playing {
     border: 2px solid var(--accent);
     box-shadow: 0 0 20px var(--shadow);
 }
+*/
 
 .col-ref,
 .card-ref {
     color: var(--muted);
 }
-
+/*
 .col-label,
 .card-label {
     color: var(--text);
 }
-
+*/
+/*
 .btn {
     background: var(--card);
     color: var(--text);
 }
 
+
 .btn-open {
     background: var(--card);
     color: var(--text);
 }
+*/
 
 .bookmark-grid {
-display: grid;
-grid-template-columns: repeat(8, minmax(0, 1fr));
-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 4px;
+    padding: 5px;
+}
+.card {
+    
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    background: var(--card-bg) !important;
+    color: var(--text);
+
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
 }
 
 .card-actions {
@@ -103,6 +139,104 @@ gap: 10px;
     align-items: center;
     margin-top: auto;
 }
+
+.card.playing {
+    border: 1px solid var(--accent);
+    background: rgba(250, 204, 21, 0.10);
+    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.15);
+}
+
+#playerBox .ayah-row.active {
+    background: rgba(250, 204, 21, 0.25) !important;
+    border-left: 4px solid #facc15 !important;
+    transition: all 0.2s ease;
+}
+.ayah-card.active,
+.ayah-row.active,
+.card.playing {
+    background: var(--active-bg);
+    border-left: 4px solid var(--active-border);
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.15);
+}
+.ayah-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 12px 14px;
+    margin: 10px 0;
+
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.ayah-number {
+    min-width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    background: var(--accent);
+    color: #111;
+    font-weight: bold;
+}
+
+.ayah-content {
+    flex: 1;
+    text-align: left;
+}
+
+.player-ayah-ref {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.player-ayah-text {
+    font-size: var(--ayah-font-size, 22px);
+    line-height: 1.8;
+    color: var(--text);
+}
+
+.card-ref {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.card-label {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.4;
+}
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: 0.15s ease;
+}
+
+button:hover {
+    background: var(--accent);
+    color: #111;
+}
+
 
 </style>
 </head>
@@ -117,20 +251,15 @@ gap: 10px;
 <div id="playerBox" class="player-box"></div>
 <div id="playerList"></div>
 
-
-
 <h2>Bookmarked Verses</h2>
 
 <div id="list" class="bookmark-grid">Loading...</div>
 
 <script>
-
 const currentAudio = new Audio();
 let currentHighlightId = null;
 let currentPlaybackToken = 0;
 let currentPlayingCard = null;
-
-
 
 document.addEventListener("DOMContentLoaded", setupTheme);
 document.addEventListener("DOMContentLoaded", loadBookmarks);
@@ -154,8 +283,11 @@ function renderBookmarks(data) {
     (data.bookmarks || []).forEach(v => {
 
         const card = document.createElement("div");
-        card.className = "bookmark-card";
+
+        // ✅ THIS IS WHERE IT GOES
+        card.className = "card ayah-row";
         card.id = `card-${v.id}`;
+        card.dataset.ayah = v.ayah;
 
         card.innerHTML = `
             <div class="card-ref">${v.surah}:${v.ayah}</div>
@@ -163,18 +295,15 @@ function renderBookmarks(data) {
 
             <div class="card-actions">
                 <button class="btn btn-ghost play-btn">🔊</button>
-                
-                <button class="delete-btn" aria-label="Delete bookmark">🗑️</button>
+                <button class="delete-btn">🗑️</button>
             </div>
         `;
 
-        // 🔊 PLAY
         card.querySelector(".play-btn").addEventListener("click", (e) => {
             e.stopPropagation();
             playAyah(v.surah, v.ayah, v.id);
         });
 
-        // DELETE
         card.querySelector(".delete-btn").addEventListener("click", async (e) => {
             e.stopPropagation();
             await fetch(`/bookmark/${v.id}`, { method: "DELETE" });
@@ -186,16 +315,12 @@ function renderBookmarks(data) {
 }
 
 function playAyah(surah, ayah, cardId) {
-
     if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
     }
-
     currentPlaybackToken++;
-
     const ayahStr = String(ayah);
-
     let ayahs = [];
 
     if (ayahStr.includes("-")) {
@@ -210,7 +335,7 @@ function playAyah(surah, ayah, cardId) {
         ayahs.push(parseInt(ayahStr));
     }
 
-    setActiveCard(cardId);   // 🔥 HERE
+    setActiveCard(cardId);
 
     showPlayerWindow(surah, ayahs);
     playSequentially(surah, ayahs, 0);
@@ -231,34 +356,44 @@ async function showPlayerWindow(surah, ayahs) {
     box.style.opacity = "1";
 
     // reset content
-
     box.innerHTML = `
-    <div class="player-header">
-        Now Playing
-    </div>
-    <div id="playerList"></div>
-`;
+        <div class="player-header">
+            Now Playing Hello
+        </div>
+        <div id="playerList"></div>
+    `;
 
     const list = document.getElementById("playerList");
 
-    // render placeholders first (instant UI)
-    ayahs.forEach(a => {
-        const row = document.createElement("div");
+    // render placeholders
+ayahs.forEach(a => {
 
-        row.id = `play-${a}`;
-        row.className = "ayah-row";
+    const card = document.createElement("div");
 
-        row.innerHTML = `
-            <div class="ayah-ref">
+    card.id = `play-${a}`;
+    card.className = "ayah-card";   // changed from ayah-row
+    card.dataset.ayah = a;
+
+    card.innerHTML = `
+        <div class="ayah-number">
+            ${a}
+        </div>
+
+        <div class="ayah-content">
+            <div class="player-ayah-ref">
                 ${surah}:${a}
             </div>
-            <div class="ayah-text">Loading...</div>
-        `;
 
-        list.appendChild(row);
-    });
+            <div class="player-ayah-text">
+                Loading...
+            </div>
+        </div>
+    `;
 
-    console.log("Player window opened", surah, ayahs);
+    list.appendChild(card);
+});
+
+    console.log("Player window opened - SHABIR IS GREAT", surah, ayahs);
 
     // fetch verses in background
     for (const a of ayahs) {
@@ -287,11 +422,8 @@ async function showPlayerWindow(surah, ayahs) {
 }
 
 function playSequentially(surah, ayahs, index, token = currentPlaybackToken) {
-
     if (token !== currentPlaybackToken) return;
-
     if (index >= ayahs.length) {
-
         if (currentPlayingCard) {
             currentPlayingCard.classList.remove("playing");
             currentPlayingCard = null;
@@ -304,19 +436,7 @@ function playSequentially(surah, ayahs, index, token = currentPlaybackToken) {
     const ayah = ayahs[index];
 
     // 🔥 optional: update player window highlight too
-    document.querySelectorAll("#playerBox .ayah-row")
-    .forEach(r => r.classList.remove("active"));
-
-        const el = document.getElementById(`play-${ayah}`);
-
-        if (el) {
-            el.classList.add("active");
-
-            el.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
+    setActiveAyah(ayah);
 
     const surahPadded = String(surah).padStart(3, '0');
     const ayahPadded = String(ayah).padStart(3, '0');
@@ -333,7 +453,6 @@ function playSequentially(surah, ayahs, index, token = currentPlaybackToken) {
 }
 
 function setActiveCard(cardId) {
-
     // remove previous
     if (currentPlayingCard) {
         currentPlayingCard.classList.remove("playing");
@@ -342,12 +461,52 @@ function setActiveCard(cardId) {
 
     // add new
     if (!cardId) return;
-
     const card = document.getElementById(`card-${cardId}`);
 
     if (card) {
         card.classList.add("playing");
         currentPlayingCard = card;
+    }
+}
+
+function setActiveAyah(ayah) {
+
+    console.log("🔥 setActiveAyah CALLED:", ayah);
+
+    const selector = `.ayah-row[data-ayah="${ayah}"]`;
+    console.log("🔎 Looking for:", selector);
+
+    const mainEl = document.querySelector(
+    `#list .ayah-row[data-ayah="${ayah}"]`
+    );
+    console.log("📦 mainEl found:", mainEl);
+
+    const playerEl = document.getElementById(`play-${ayah}`);
+    console.log("🎧 playerEl found:", playerEl);
+
+    if (!mainEl) {
+        console.warn("❌ MAIN AYAH NOT FOUND IN DOM");
+    }
+
+    if (!playerEl) {
+        console.warn("❌ PLAYER AYAH NOT FOUND");
+    }
+
+    // clear old
+    document.querySelectorAll("#list .active, #playerBox .active")
+        .forEach(el => el.classList.remove("active"));
+
+    // apply new
+    if (mainEl) mainEl.classList.add("active");
+    if (playerEl) {
+        playerEl.classList.add("active");
+
+        console.log("📜 scrolling into view:", playerEl);
+
+        playerEl.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
     }
 }
 
