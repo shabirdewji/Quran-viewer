@@ -1,0 +1,283 @@
+/* =========================================================
+   THEME VARIABLES
+========================================================= */
+:root {
+    --bg: #111;
+    --text: #fff;
+    --muted: #888;
+    --border: #333;
+
+    --accent: #facc15;
+    --active-bg: rgba(250, 204, 21, 0.18);
+
+    --popup-bg: #1a1a1a;
+    --popup-text: #fff;
+
+    --button-bg: #333;
+    --button-text: #fff;
+
+    --surface: #1a1a1a;
+    --surface-2: #1c2533;
+}
+
+/* LIGHT MODE */
+body.light {
+    --bg: #fff;
+    --text: #111;
+    --muted: #666;
+    --border: #e5e5e5;
+
+    --accent: #1d4ed8;
+
+    --popup-bg: #fff;
+    --popup-text: #111;
+
+    --button-bg: #eaf1ff;
+    --button-text: #111;
+
+    --surface: #f6f6f6;
+    --surface-2: #eaf1ff;
+}
+
+/* =========================================================
+   GLOBAL BASE
+========================================================= */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.hidden {
+    display: none !important;
+}
+
+a {
+    color: var(--accent);
+}
+
+/* =========================================================
+   APP LAYOUT
+========================================================= */
+
+.app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.reader {
+    flex: 1;
+    overflow-y: auto;
+    margin-left: 220px;
+}
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar {
+    position: sticky;
+    top: 0;
+    height: 80px;
+    background: var(--bg);
+    z-index: 1000;
+}
+
+/* =========================================================
+   LEFT CONTROLS
+========================================================= */
+
+.left-controls {
+    position: fixed;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 2000;
+}
+
+.tool-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.tool-btn {
+    background: var(--surface-2);
+    color: var(--text);
+    border: none;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.tool-btn:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+.tool-btn.active {
+    background: var(--active-bg);
+}
+
+/* =========================================================
+   AYAH SYSTEM
+========================================================= */
+
+.ayah-row {
+    padding: 0;
+    margin: 0;
+}
+
+.ayah-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.ayah-number {
+    flex: 0 0 40px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.ayah-number::after {
+    content: ".";
+}
+
+.ayah {
+    font-size: var(--ayah-font-size, 16px);
+}
+
+.ayah-card.read {
+    opacity: 0.5;
+}
+
+/* active highlight */
+.ayah-card.active {
+    background: var(--active-bg);
+    border-color: var(--accent);
+}
+
+/* =========================================================
+   NOTES
+========================================================= */
+
+.note-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+}
+
+.note-dot.has-note {
+    background: var(--accent);
+}
+
+.note-popup {
+    background: var(--popup-bg);
+    color: var(--popup-text);
+    border: 1px solid var(--border);
+}
+
+.note-text {
+    width: 100%;
+    min-height: 140px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+/* =========================================================
+   SUMMARY / POPUPS
+========================================================= */
+
+.popup,
+.popup-content,
+#summaryPopup {
+    background: var(--popup-bg);
+    color: var(--popup-text);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.surah-search {
+    position: relative;
+    width: 220px;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 300px;
+    overflow-y: auto;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    display: none;
+}
+
+.search-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.search-item:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+.progress-display {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 13px;
+}

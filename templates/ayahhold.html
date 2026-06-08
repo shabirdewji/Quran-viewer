@@ -28,10 +28,29 @@
 
 <div class="app">
 
+    <!-- LEFT CONTROLS -->
+    <div class="left-controls">
+    <div class="tool-group compact">
+        <button class="tool-btn" onclick="pinAyah()">📌 Pin</button>
+        <button class="tool-btn" onclick="addBookmark()">🔖 Bookmark</button>
+        <button class="tool-btn" onclick="window.location.href='/bookmarks'">📚 View Bookmarks</button>
+    </div>
+    <div class="tool-group compact">
+        <button class="tool-btn" onclick="changeFontSize(-2)">A−</button>
+        <button class="tool-btn" onclick="event.stopPropagation(); changeFontSize(2)">A+</button>
+        <button class="tool-btn" onclick="toggleTheme()">🌓 Dark/Light</button>
+    </div>
+    <div class="tool-group compact">
+        <button class="tool-btn" onclick="playAyah()">🔊 Play Ayah</button>
+        <button class="tool-btn" onclick="playSurah()">📖 Play Surah</button>
+<!--        <button class="tool-btn" onclick="togglePause()">⏸ Pause</button> -->
+    </div>
+    <div id="pinStatus"></div>
+    </div>
+
 <!-- TOP BAR -->
-<div class="topbar">
-    <div class="tools-container">
-        <div class="btn-group">
+    <div class="topbar">
+        <div class="search-bar">
             <!-- SURAH DROPDOWN -->
             <select id="surahSelect">
                 {% for num, name in surah_names.items() %}
@@ -50,48 +69,27 @@
                 <div id="surahSearchResults" class="search-results"></div>
             </div>
 
-            <button id="summaryBtn" class="summary-btn">Summary</button>
-            <button id="markReadBtn" class="summary-btn">Mark Read</button>
-        </div>
+            <button id="summaryBtn" class="summary-btn">
+            Summary
+            </button>
 
-        <div class="btn-group">
+            <button id="markReadBtn" class="summary-btn">Mark Read</button>
+
+            <!-- AYAH DROPDOWN -->
             <select id="ayahSelect"></select>
 
             <button data-action="prev-ayah" class="summary-btn">Prev</button>
             <button data-action="next-ayah" class="summary-btn">Next</button>
 
-            <button class="summary-btn" onclick="goContinue()">GoTo Pinned</button>
+            <!-- CONTINUE -->
+            <button class="summary-btn" onclick="goContinue()">
+                GoTo Pinned
+            </button>
             <div id="progressDisplay" class="progress-display">0%</div>
         </div>
     </div>
 
-
-    <div class="tools-container">
-        <div class="btn-group">
-            <button class="summary-btn" onclick="pinAyah()">📌 Pin</button>
-            <button class="summary-btn" onclick="goContinue()">GoTo Pinned</button>
-        </div>
-        <div class="btn-group">
-            <button class="summary-btn" onclick="addBookmark()">🔖 Bookmark</button>
-            <button class="summary-btn" onclick="window.location.href='/bookmarks'">📚 View Bookmarks</button>
-        </div>
-
-        <div class="btn-group">
-            <button class="summary-btn" onclick="changeFontSize(-2)">A−</button>
-            <button class="summary-btn" onclick="changeFontSize(2)">A+</button>
-            <button class="summary-btn" onclick="toggleTheme()">🌓 Dark/Light</button>
-        </div>
-
-        <div class="btn-group">
-            <button class="summary-btn" onclick="playAyah()">🔊 Play Ayah</button>
-            <button class="summary-btn" onclick="playSurah()">📖 Play Surah</button>
-        </div>
-    </div>
-</div>
-
-<div id="pinStatus"></div>
-
-<!--    <div class="main"> -->
+    <div class="main">
 
 <!-- VIEW -->
     <div class="page">
@@ -130,8 +128,8 @@
             {% endfor %}
         </div>
     </div>
+    </div>
 </div>
-
 
 <!-- ✅ GLOBAL UI ELEMENTS (ONLY ONCE) -->
 

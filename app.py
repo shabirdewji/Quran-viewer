@@ -131,22 +131,16 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-
 def get_surah_counts():
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         SELECT surah, COUNT(*) as total
         FROM quran
         GROUP BY surah
     """)
-
     rows = cur.fetchall()
-
     return {row["surah"]: row["total"] for row in rows}
-
-
 
 @app.route("/")
 def home():
@@ -179,7 +173,6 @@ def view_surah(surah, ayah):
     """, (surah,))
 
     rows = cur.fetchall()
-
     if not rows:
         return "Not found", 404
 
@@ -209,14 +202,10 @@ def view_surah(surah, ayah):
        
 @app.route("/save_progress", methods=["POST"])
 def save_progress():
-
     data = request.json
-
     surah = data.get("surah")
     ayah = data.get("ayah")
-
     conn = get_db()
-
     conn.execute("""
         INSERT INTO progress (id, surah, ayah)
         VALUES (1, ?, ?)
@@ -225,16 +214,12 @@ def save_progress():
             surah=excluded.surah,
             ayah=excluded.ayah
     """, (surah, ayah))
-
     conn.commit()
-
     return jsonify({"status": "ok"})
 
 @app.route("/get_progress")
 def get_progress():
-
     conn = get_db()
-
     row = conn.execute("""
         SELECT surah, ayah
         FROM progress
@@ -254,30 +239,40 @@ def get_progress():
 
 @app.route("/mark_read/<int:surah>", methods=["POST"])
 def mark_read(surah):
-
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         UPDATE quran
         SET is_read = 1
         WHERE surah = ?
     """, (surah,))
-
     conn.commit()
     conn.close()
-
     return {"status": "ok"}
 
+@app.route("/readprogress")
+def readprogress():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COUNT(*) as read_count
+        FROM quran
+        WHERE is_read = 1
+    """)
+    read_count = cur.fetchone()["read_count"]
+    total = 6345
+    percent = round((read_count * 100) / total, 2)
+    return {
+        "read_count": read_count,
+        "total": total,
+        "percent": percent
+    }
 
 @app.route("/bookmark", methods=["POST"])
 def add_bookmark():
-
     data = request.json
-
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         INSERT INTO bookmarks (surah, ayah, label)
         VALUES (?, ?, ?)
@@ -288,28 +283,22 @@ def add_bookmark():
     ))
 
     conn.commit()
-
     return jsonify({"status": "ok"})
 
 @app.route("/bookmarks")
 def bookmarks_page():
     return render_template("bookmarks.html")
 
-
 @app.route("/api/bookmarks")
 def get_bookmarks():
-
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         SELECT id, surah, ayah, label
         FROM bookmarks
         ORDER BY surah ASC
     """)
-
     rows = cur.fetchall()
-
     return jsonify({
         "bookmarks": [
             dict(row) for row in rows
@@ -318,9 +307,7 @@ def get_bookmarks():
 
 @app.route("/api/ayah/<int:surah>/<int:ayah>")
 def get_ayah(surah, ayah):
-
     conn = get_db()
-
     row = conn.execute("""
         SELECT text
         FROM quran
@@ -346,10 +333,8 @@ def delete_bookmark(id):
 @app.route("/pin", methods=["POST"])
 def pin():
     data = request.get_json()
-
     surah = data["surah"]
     ayah = data["ayah"]
-
     conn = get_db()
     conn.execute(
         "UPDATE pins SET surah=?, ayah=? WHERE id=1",
@@ -357,7 +342,6 @@ def pin():
     )
     conn.commit()
     conn.close()
-
     return jsonify({"status": "ok"})
     
     
@@ -365,15 +349,11 @@ def pin():
 def get_pin():
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("SELECT surah, ayah FROM pins WHERE id=1")
     row = cur.fetchone()
-
     conn.close()
-
     if not row:
         return jsonify({})
-
     return jsonify({
         "surah": row["surah"],
         "ayah": row["ayah"]
@@ -381,7 +361,6 @@ def get_pin():
     
 @app.route("/set_read", methods=["POST"])
 def set_read():
-    
     data = request.get_json()
     ayah = int(data["ayah"])
     surah = int(data["surah"])
@@ -398,7 +377,7 @@ def set_read():
         WHERE surah = ? AND ayah = ?
     """, (is_read, surah, ayah))
     conn.commit()
-    print("ROWS UPDATED:", cur.rowcount)
+    #print("ROWS UPDATED:", cur.rowcount)
     conn.close()
     return {"ok": True, "updated": cur.rowcount}
 
@@ -407,10 +386,8 @@ def get_read():
     #print("🔥 GET_READ HIT")
     surah = request.args.get("surah")
     #print("In get_read, surah = ", surah)
-
     conn = get_db()
     conn.row_factory = sqlite3.Row
-
     rows = conn.execute("""
         SELECT ayah, is_read
         FROM quran
@@ -418,39 +395,30 @@ def get_read():
     """, (surah,)).fetchall()
 
     conn.close()
-
     return {
         r["ayah"]: r["is_read"]
         for r in rows
     }
-    
-    
+        
 @app.route("/get_note")
 def get_note():
-
     surah = int(request.args.get("surah"))
     ayah = request.args.get("ayah")
-
     conn = get_db()
-
     # -----------------------------------
     # SINGLE AYAH (popup)
     # -----------------------------------
     if ayah is not None:
         ayah = int(ayah)
-
         row = conn.execute("""
             SELECT note
             FROM notes
             WHERE surah = ? AND ayah = ?
         """, (surah, ayah)).fetchone()
-
         conn.close()
-
         return jsonify({
             "note": row["note"] if row else ""
         })
-
     # -----------------------------------
     # ALL NOTES IN SURAH (dots)
     # -----------------------------------
@@ -459,9 +427,7 @@ def get_note():
         FROM notes
         WHERE surah = ?
     """, (surah,)).fetchall()
-
     conn.close()
-
     return jsonify({
         str(row["ayah"]): row["note"]
         for row in rows
@@ -469,13 +435,9 @@ def get_note():
 
 @app.route("/get_notes")
 def get_notes():
-
     surah = int(request.args.get("surah"))
     #print("SURAH REQUESTED:", surah)
-    
-
     conn = get_db()
-
     rows = conn.execute("""
         SELECT ayah, note
         FROM notes
@@ -483,7 +445,6 @@ def get_notes():
     """, (surah,)).fetchall()
 
     conn.close()
-
     return jsonify({
         str(row["ayah"]): row["note"]
         for row in rows
@@ -491,27 +452,20 @@ def get_notes():
     
 @app.route("/save_note", methods=["POST"])
 def save_note():
-
     data = request.get_json()
-
     surah = int(data["surah"])
     ayah = int(data["ayah"])
     note = data["note"]
-
     conn = get_db()
-
     conn.execute("""
         INSERT INTO notes (surah, ayah, note)
         VALUES (?, ?, ?)
-
         ON CONFLICT(surah, ayah)
         DO UPDATE SET
             note = excluded.note
     """, (surah, ayah, note))
-
     conn.commit()
     conn.close()
-
     return jsonify({
         "ok": True
     })
@@ -520,12 +474,9 @@ def save_note():
 def get_surah_summary():
     #print("IN GET_SURA_SUMMARY")
     surah = request.args.get("surah")
-
     if surah is None:
         return jsonify({"text": ""})
-
     conn = get_db()
-
     row = conn.execute("""
         SELECT text
         FROM surah
@@ -533,10 +484,7 @@ def get_surah_summary():
     """, (int(surah),)).fetchone()
     
     #print("TEXT:", row["text"])
-    
-
     conn.close()
-
     return jsonify({
         "text": row["text"] if row else ""
     })
@@ -546,50 +494,37 @@ def update_surah_summary():
     data = request.json
     surah = int(data["surah"])
     text = data["text"]
-
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         UPDATE surah
         SET text = ?
         WHERE id = ?
     """, (text, surah))
-
     conn.commit()
     conn.close()
-
     return jsonify({"status": "ok"})
 
-
-
 @app.route("/api/highlight", methods=["POST"])
-def toggle_highlight():
-    
-    print("REQUEST JSON:", request.json)
-    
+def toggle_highlight():    
+    #print("REQUEST JSON:", request.json)
     data = request.json
     surah = data["surah"]
     ayah = data["ayah"]
     word = data["word_index"]
-
     conn = get_db()
     cur = conn.cursor()
-
     # check if exists
     cur.execute("""
         SELECT id FROM highlights
         WHERE surah=? AND ayah=? AND word_index=?
     """, (surah, ayah, word))
-
     row = cur.fetchone()
-
     if row:
         # remove highlight
         cur.execute("DELETE FROM highlights WHERE id=?", (row["id"],))
         conn.commit()
         return {"status": "removed"}
-
     else:
         # add highlight
         cur.execute("""
@@ -602,18 +537,14 @@ def toggle_highlight():
 @app.route("/api/highlights")
 def get_highlights():
     surah = request.args.get("surah")
-
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         SELECT ayah, word_index
         FROM highlights
         WHERE surah=?
     """, (surah,))
-
     rows = cur.fetchall()
-
     return jsonify([
         {"ayah": r["ayah"], "word_index": r["word_index"]}
         for r in rows
@@ -622,23 +553,18 @@ def get_highlights():
 @app.route("/get_wiki_link")
 def get_wiki_link():
     surah = int(request.args.get("surah"))
-
     conn = get_db()
     cur = conn.cursor()
-
     cur.execute("""
         SELECT url
         FROM wiki
         WHERE surah = ?
         LIMIT 1
     """, (surah,))
-
     row = cur.fetchone()
-
     return jsonify({
         "url": row["url"] if row else None
     })
-    
     
 if __name__ == "__main__":
     app.run(debug=True)

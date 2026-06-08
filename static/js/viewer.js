@@ -56,26 +56,23 @@ function observeLeftControls() {
 
 document.addEventListener("DOMContentLoaded", init);
 
-
 async function init() {
     if (!pageData) {
         console.warn("pageData missing");
         return;
     }
 
-    console.log("INIT START");
-
     await setupApp();
     await hydrateApp();
     await postRender();
 
-    console.log("INIT DONE");
+
 }
+
 async function setupApp() {
     currentSurah = pageData.surah;
     currentAyah = pageData.ayah;
     currentIndex = currentAyah - 1;
-
     audioPlayer = $("audioPlayer");
 
     setupUI();
@@ -89,6 +86,7 @@ async function setupApp() {
     observeLeftControls();
     applyFontSize();
     updateAyahInfo();
+    loadreadProgress();
 }
 async function hydrateApp() {
     await loadReadStates(currentSurah);
@@ -104,6 +102,7 @@ async function hydrateApp() {
         currentIndex = currentAyah - 1;
     }
 }
+
 async function postRender() {
     await waitForAyahs();   // 1. render .ayah text
     wrapWords();         // 2. convert text → spans
@@ -119,20 +118,14 @@ async function postRender() {
    UI
 ========================================================= */
 /* Updates: current ayah number display, total ayahs display*/
-
 function updateAyahInfo() {
     const current = $("currentAyah");
     const total = $("totalAyahs");
     if (current) current.textContent = currentAyah;
     if (total) total.textContent = surahCounts[currentSurah] || "?";
 }
+
 /*Initial UI setup: sets total ayahs, forces initial highlight via focusAyah */
-/*
-function setupUI() {
-    const totalEl = $("totalAyahs");
-    if (totalEl) totalEl.textContent = surahCounts[currentSurah] || "?";
-    focusAyah(currentAyah);
-}*/
 function setupUI() {
     const totalEl = $("totalAyahs");
     if (totalEl) totalEl.textContent = surahCounts[currentSurah] || "?";
@@ -146,7 +139,7 @@ function stripHtml(html) {
     return div.textContent || div.innerText || "";
 }
 /* =========================================================
-   THEME
+              THEME
 ========================================================= */
 function setupTheme() {
     const saved = localStorage.getItem("theme") || "dark";
@@ -171,6 +164,7 @@ function applyFontSize() {
     root.style.setProperty("--ayah-font-size", fontSize + "px");
     console.log("🔥 FONT SIZE APPLY:", fontSize);
 }
+
 function changeFontSize(amount) {
     fontSize += amount;
     if (fontSize < 18) fontSize = 18;
@@ -178,11 +172,12 @@ function changeFontSize(amount) {
     applyFontSize();
     localStorage.setItem("fontSize", fontSize);
 }
+
 /* =========================================================
    NAVIGATION
 =========================================================*/
 
-function goNext() {
+function goNextAyah() {
     console.log("NEXT CLICK:", currentSurah, currentAyah);
     let s = currentSurah;
     let a = currentAyah;
@@ -195,7 +190,8 @@ function goNext() {
     }
     window.location.href = `/view/${s}/${a}`;
 }
-function goPrev() {
+
+function goPrevAyah() {
     console.log("PREV CLICK:", currentSurah, currentAyah);
     let s = currentSurah;
     let a = currentAyah;
@@ -207,100 +203,6 @@ function goPrev() {
     }
     window.location.href = `/view/${s}/${a}`;
 }
-
-document.addEventListener("click", (e) => {
-    if (e.target.closest("#nextBtn")) {
-        console.log("next clicked");
-        goNext();
-    }
-
-    if (e.target.closest("#prevBtn")) {
-        console.log("prev clicked");
-        goPrev();
-    }
-});
-/* =========================================================
-   HIGHLIGHTER
-========================================================= */
-async function saveHighlight(el) {
-  const ayahEl = el.closest(".ayah");
-
-  if (!ayahEl || !ayahEl.dataset?.ayah) {
-    console.error("Invalid ayah element:", ayahEl);
-    return;
-  }
-
-  const ayah = parseInt(ayahEl.dataset.ayah, 10);
-  const word = parseInt(el.dataset.word, 10);
-
-  if (Number.isNaN(ayah) || Number.isNaN(word)) {
-    console.error("Invalid highlight payload:", { ayah, word });
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/highlight", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        surah: currentSurah,
-        ayah,
-        word_index: word
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Server error:", err);
-      return;
-    }
-
-    const data = await res.json();
-
-    el.classList.toggle("highlighted", data.status === "added");
-  } catch (err) {
-    console.error("Network error:", err);
-  }
-}
-
-/* Load db. */
-
-async function loadHighlights() {
-  const res = await fetch(`/api/highlights?surah=${currentSurah}`);
-  const data = await res.json();
-
-  data.forEach(({ ayah, word_index }) => {
-    const ayahEl = document.querySelector(
-      `.ayah[data-ayah="${ayah}"]`
-    );
-
-    if (!ayahEl) {
-      console.warn("Missing ayah in DOM:", ayah);
-      return;
-    }
-
-    const wordEl = ayahEl.querySelector(
-      `.word[data-word="${word_index}"]`
-    );
-
-    if (!wordEl) {
-      console.warn("Missing word:", ayah, word_index);
-      return;
-    }
-
-    wordEl.classList.add("highlighted");
-  });
-}
-
-document.addEventListener("click", (e) => {
-  if (!e.target.classList.contains("word")) return;
-
-  const el = e.target;
-
-  el.classList.toggle("highlighted");
-
-  saveHighlight(el);
-});
 
 /* =========================================================
    DROPDOWNS
@@ -351,19 +253,16 @@ function focusAyah(surah, ayah) {
 }
 
 /* Remove .active from all ayahs
-      Add .active to current ayah
+   Add .active to current ayah
    Scroll into view (ONLY during playback):
 */
 
 function highlightAyah(surah, ayah, scroll = false) {
     document.querySelectorAll(".ayah-row")
         .forEach(el => el.classList.remove("active"));
-
     const el = document.getElementById(`ayah-${surah}-${ayah}`);
     if (!el) return;
-
     el.classList.add("active");
-
     if (scroll) {
         el.scrollIntoView({
             behavior: "smooth",
@@ -379,22 +278,82 @@ let wrapped = false;
 function wrapWords() {
   if (wrapped) return;
   wrapped = true;
-
   document.querySelectorAll(".ayah").forEach((ayah) => {
     const text = ayah.textContent.trim();
     if (!text) return;
-
     const words = text.split(/\s+/);
-
     ayah.innerHTML = words
       .map((word, i) =>
         `<span class="word" data-word="${i}">${word}</span>`
       )
       .join(" ");
-
     ayah.dataset.wrapped = "1";
   });
 }
+
+async function saveHighlight(el) {
+  const ayahEl = el.closest(".ayah");
+  if (!ayahEl || !ayahEl.dataset?.ayah) {
+    console.error("Invalid ayah element:", ayahEl);
+    return;
+  }
+  const ayah = parseInt(ayahEl.dataset.ayah, 10);
+  const word = parseInt(el.dataset.word, 10);
+  if (Number.isNaN(ayah) || Number.isNaN(word)) {
+    console.error("Invalid highlight payload:", { ayah, word });
+    return;
+  }
+  try {
+    const res = await fetch("/api/highlight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        surah: currentSurah,
+        ayah,
+        word_index: word
+      })
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Server error:", err);
+      return;
+    }
+    const data = await res.json();
+    el.classList.toggle("highlighted", data.status === "added");
+  } catch (err) {
+    console.error("Network error:", err);
+  }
+}
+
+async function loadHighlights() {
+  const res = await fetch(`/api/highlights?surah=${currentSurah}`);
+  const data = await res.json();
+  data.forEach(({ ayah, word_index }) => {
+    const ayahEl = document.querySelector(
+      `.ayah[data-ayah="${ayah}"]`
+    );
+    if (!ayahEl) {
+      console.warn("Missing ayah in DOM:", ayah);
+      return;
+    }
+    const wordEl = ayahEl.querySelector(
+      `.word[data-word="${word_index}"]`
+    );
+    if (!wordEl) {
+      console.warn("Missing word:", ayah, word_index);
+      return;
+    }
+    wordEl.classList.add("highlighted");
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("word")) return;
+  const el = e.target;
+  el.classList.toggle("highlighted");
+  saveHighlight(el);
+});
+
 /* =========================================================
    AUDIO
 ========================================================= */
@@ -415,6 +374,9 @@ function handleAudioEnd() {
 
 function playAyah() {
     if (!audioPlayer) return;
+
+    showTray();
+
     const id = String(currentSurah).padStart(3, "0") + String(currentAyah).padStart(3, "0");
     audioPlayer.src = "https://everyayah.com/data/Alafasy_128kbps/" + id + ".mp3";
     audioPlayer.play();
@@ -431,18 +393,47 @@ function playSurah() {
     isPlayingSurah = true;
     playNextInSurah();
 }
+
+function playNextInSurah() {
+    if (!isPlayingSurah) return;
+    const ayahNum = currentIndex + 1;
+    if (!surahQueue[currentIndex]) {
+        isPlayingSurah = false;
+        return;
+    }
+    focusAyah(currentSurah, ayahNum);
+
+    showTray();
+
+    audioPlayer.src = surahQueue[currentIndex];
+    audioPlayer.play().catch(err => {
+        console.log(err);
+        isPlayingSurah = false;
+    });
+}
+
+function togglePause() {
+    if (!audioPlayer) return;
+    if (audioPlayer.paused) audioPlayer.play();
+    else audioPlayer.pause();
+}
+
 /* =========================================================
-   PREV, NEXT & SEARCH
+   PREV, NEXT & SEARCH SURAH
 ========================================================= */
 
-document.getElementById("prevSurahBtn")
-    .addEventListener("click", goToPreviousSurah);
+document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
 
-document.getElementById("nextSurahBtn")
-    .addEventListener("click", goToNextSurah);
+    switch (btn.dataset.action) {
+        case "prev-ayah": return goPrevAyah();
+        case "next-ayah": return goNextAyah();
+        case "prev-surah": return goToPreviousSurah();
+        case "next-surah": return goToNextSurah();
+    }
+});
 
-//document.getElementById("searchSurahBtn")
-//    .addEventListener("click", searchSurah);
 
 const searchBox = document.getElementById("surahSearchBox");
 const searchInput = document.getElementById("surahSearchInput");
@@ -462,16 +453,12 @@ function goToNextSurah() {
 
 function searchSurah() {
     const query = prompt("Search Surah:");
-
     if (!query) return;
-
     const q = query.trim().toLowerCase();
-
     const match = surahs.find(s =>
         s.name.toLowerCase().includes(q) ||
         s.number.toString() === q
     );
-
     if (match) {
         loadSurah(match.number);
     } else {
@@ -479,10 +466,8 @@ function searchSurah() {
     }
 }
 
-
 function toggleSearch() {
     const isHidden = searchBox.style.display === "none" || !searchBox.style.display;
-
     if (isHidden) {
         searchBox.style.display = "block";
         searchInput.focus();
@@ -491,121 +476,70 @@ function toggleSearch() {
     }
 }
 
-function playNextInSurah() {
-    if (!isPlayingSurah) return;
-
-    const ayahNum = currentIndex + 1;
-
-    if (!surahQueue[currentIndex]) {
-        isPlayingSurah = false;
-        return;
-    }
-
-    focusAyah(currentSurah, ayahNum);
-
-    audioPlayer.src = surahQueue[currentIndex];
-
-    audioPlayer.play().catch(err => {
-        console.log(err);
-        isPlayingSurah = false;
-    });
-}
-
-function togglePause() {
-    if (!audioPlayer) return;
-    if (audioPlayer.paused) audioPlayer.play();
-    else audioPlayer.pause();
-}
-
-
 searchInput.addEventListener("input", () => {
-
     const q = searchInput.value.trim().toLowerCase();
-
     if (!q) {
         resultsBox.style.display = "none";
         return;
     }
-
     const matches = surahs
         .filter(s =>
             s.name.toLowerCase().includes(q) ||
             s.number.toString() === q
         )
         .slice(0, 15);
-
     renderResults(matches);
 });
 
 function renderResults(matches) {
-
     resultsBox.innerHTML = "";
-
     if (!matches.length) {
         resultsBox.style.display = "none";
         return;
     }
-
     matches.forEach(surah => {
-
         const div = document.createElement("div");
-
         div.className = "search-item";
         div.textContent = `${surah.number}. ${surah.name}`;
-
         div.addEventListener("click", () => {
-
             // ✅ JUMP TO SURAH (ayah 1)
             window.location.href = `/view/${surah.number}/1`;
         });
-
         resultsBox.appendChild(div);
     });
-
     resultsBox.style.display = "block";
 }
+
 document.addEventListener("click", e => {
 
     if (!e.target.closest(".surah-search")) {
         resultsBox.style.display = "none";
     }
 });
+
 let selectedIndex = -1;
 
 searchInput.addEventListener("keydown", e => {
-
     const items = [...resultsBox.querySelectorAll(".search-item")];
-
     if (!items.length) return;
-
     if (e.key === "ArrowDown") {
-
         e.preventDefault();
-
         selectedIndex = Math.min(
             selectedIndex + 1,
             items.length - 1
         );
-
         updateSelection(items);
     }
-
     else if (e.key === "ArrowUp") {
-
         e.preventDefault();
-
         selectedIndex = Math.max(
             selectedIndex - 1,
             0
         );
-
         updateSelection(items);
     }
-
     else if (e.key === "Enter") {
-
         e.preventDefault();
-
         if (selectedIndex >= 0) {
             items[selectedIndex].click();
         }
@@ -613,9 +547,7 @@ searchInput.addEventListener("keydown", e => {
 });
 
 function updateSelection(items) {
-
     items.forEach(i => i.classList.remove("active"));
-
     if (selectedIndex >= 0) {
         items[selectedIndex].classList.add("active");
         items[selectedIndex].scrollIntoView({
@@ -627,31 +559,29 @@ function updateSelection(items) {
    MARK READ
 ========================================================= */
 document.getElementById("markReadBtn")
-    .addEventListener("click", () => {
-
+    .addEventListener("click", async () => {
         document.querySelectorAll(".read-toggle").forEach(cb => {
             cb.checked = true;
         });
-
         document.querySelectorAll(".ayah-card").forEach(card => {
             card.classList.add("read");
         });
-    });
-
-document.getElementById("markReadBtn")
-    .addEventListener("click", async () => {
-
         const res = await fetch(`/mark_read/${currentSurah}`, {
             method: "POST"
         });
-
         const data = await res.json();
-
         if (data.status === "ok") {
             markSurahAsReadUI();
         }
+        loadreadProgress();
     });
 
+async function loadreadProgress() {
+    const res = await fetch("/readprogress");
+    const data = await res.json();
+    const el = document.getElementById("progressDisplay");
+    el.textContent = `${data.percent}%`;
+}
 /* =========================================================
    PROGRESS
 ========================================================= */
@@ -670,52 +600,43 @@ async function sendProgress() {
         console.log("Save failed");
     }
 }
+
 /*
 Remove .active from all ayahs
    Add .active to current ayah
 Scroll into view (ONLY during playback):
 */
-
 async function loadProgress() {
     try {
         const res = await fetch("/get_progress");
         const data = await res.json();
-
         currentSurah = data.surah;
         currentAyah = data.ayah;
-
         setupDropdowns();
         await loadReadStates(currentSurah);
         await waitForAyahs();
-
         // IMPORTANT: trigger native browser anchor scroll first
         const id = `ayah-${currentSurah}-${currentAyah}`;
-        
         const el = document.getElementById(id);
-
         if (el) {
             el.scrollIntoView({
                 behavior: "auto",
                 block: "center"
             });
         }
-
         focusAyah(currentSurah, currentAyah);
-
         // then stabilize + apply highlight
         requestAnimationFrame(() => {
             const el = document.getElementById(id);
             if (!el) return;
-
             el.classList.add("active");
-
             updateAyahInfo();
         });
-
     } catch (err) {
         console.error("LOAD PROGRESS ERROR:", err);
     }
 }
+
 /* =========================================================
    WAIT FOR AYAHS
 ========================================================= */
@@ -729,6 +650,7 @@ function waitForAyahs() {
         check();
     });
 }
+
 /* =========================================================
    READ STATES
    Marks ayahs as read
@@ -761,7 +683,9 @@ document.addEventListener("change", async (e) => {
         body: JSON.stringify({ surah: currentSurah, ayah: ayahNumber, is_read: isRead })
     });
     row.classList.toggle("read", isRead);
+    loadreadProgress();
 });
+
 /* =========================================================
    NOTES
    Marks which ayahs have notes
@@ -771,12 +695,12 @@ document.addEventListener("change", async (e) => {
 async function loadNoteStates(surah) {
     const res = await fetch(`/get_notes?surah=${surah}`);
     const data = await res.json();
-
+/*
     console.log("RAW NOTE RESPONSE:", data);
     console.log("TYPE:", typeof data);
     console.log("KEYS:", Object.keys(data || {}));
     console.table(data);
-
+*/
     document.querySelectorAll(".note-dot").forEach(dot => dot.classList.remove("has-note"));
     document.querySelectorAll(".ayah-row").forEach(card => {
         const ayah = String(card.dataset.ayah);
@@ -854,28 +778,22 @@ async function loadBookmarks() {
     try {
         const res = await fetch("/api/bookmarks");
         const data = await res.json();
-
         const box = $("list");
         if (!box) return;
-
         box.innerHTML = "";
-
         if (!data.bookmarks || data.bookmarks.length === 0) {
             box.innerHTML = "<p>No bookmarks yet</p>";
             return;
         }
-
         data.bookmarks.forEach(b => {
             const row = document.createElement("div");
             row.className = "verse";
-
             row.innerHTML = `
                 <div class="row">
                     <div class="left">
                         <div class="ref">Surah ${b.surah}:${b.ayah}</div>
                         <div class="text">${b.label || "No label"}</div>
                     </div>
-
                     <div class="actions">
                         <button class="play-btn">🔊 Play</button>
                         <button class="open-btn">Open</button>
@@ -941,11 +859,8 @@ function pinAyah() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ surah: currentSurah, ayah: currentAyah })
     }).then(res => res.json()).then(data => {
-
         const pinStatus = $("pinStatus");
-
         if (pinStatus) pinStatus.innerText = `📌 Pinned ${currentSurah}:${currentAyah}`;
-
         showToast(`📌 Pinned ${currentSurah}:${currentAyah}`);
         console.log("Pinned:", data);
     });
@@ -954,19 +869,14 @@ function pinAyah() {
 function waitForElement(id, timeout = 3000) {
     return new Promise(resolve => {
         const start = Date.now();
-
         const check = () => {
             const el = document.getElementById(id);
-
             if (el) return resolve(el);
-
             if (Date.now() - start > timeout) {
                 return resolve(null);
             }
-
             requestAnimationFrame(check);
         };
-
         check();
     });
 }
@@ -982,6 +892,7 @@ async function goContinue() {
 window.goToAyah = function (surah, ayah) {
     window.location.href = `/view/${surah}/${ayah}#ayah-${surah}-${ayah}`;
 };
+
 
 window.addEventListener("DOMContentLoaded", async () => {
 const id = window.location.hash.replace("#", "");
@@ -1011,6 +922,7 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 2000);
 }
+
 /* =========================================================
    SUMMARY
 ========================================================= */
@@ -1024,16 +936,12 @@ function setupSummary() {
     if (summaryBtn) {
         summaryBtn.addEventListener("click", async () => {
             summarySurah = document.getElementById("surahSelect").value;
-
             const res = await fetch(
                 `/get_surah_summary?surah=${summarySurah}`
             );
-
             const data = await res.json();
-
             document.getElementById("summaryText").value =
                 data.text || "";
-
             document.getElementById("summaryPopup")
                 .classList.remove("hidden");
         });
@@ -1048,10 +956,8 @@ function setupSummary() {
 
     if (saveBtn) {
         saveBtn.addEventListener("click", async (e) => {
-
             const text =
                 document.getElementById("summaryText").value;
-
             await fetch("/update_surah_summary", {
                 method: "POST",
                 headers: {
@@ -1092,24 +998,18 @@ function renderNote(note) {
 }
 
 function setupLinks() {
-
     // Yusuf Ali and other direct URLs
     document.querySelectorAll(".externalLink")
         .forEach(btn => {
-
             btn.addEventListener("click", () => {
-
                 const surah =
                     document.getElementById("surahSelect").value;
-
                 const url =
                     btn.dataset.url.replace(
                         "{surah}",
                         surah
                     );
-
                 console.log("🔗 Opening:", url);
-
                 window.open(url, "_blank");
             });
         });
@@ -1117,23 +1017,16 @@ function setupLinks() {
     // Wiki links from database
     document.querySelectorAll(".wikiLink")
         .forEach(btn => {
-
             btn.addEventListener("click", async () => {
-
                 const surah =
                     document.getElementById("surahSelect").value;
-
                 console.log("📖 Requesting wiki for surah:", surah);
-
                 const res =
                     await fetch(
                         `/get_wiki_link?surah=${surah}`
                     );
-
                 const data = await res.json();
-
                 console.log("📦 Wiki response:", data);
-
                 if (data.url) {
                     window.open(data.url, "_blank");
                 } else {
@@ -1164,4 +1057,25 @@ function setupControlsAutoHide() {
     controls.addEventListener("mouseenter", showControls);
     document.addEventListener("mousemove", e => { if (e.clientX < 120) showControls(); });
     document.addEventListener("touchstart", e => { if (e.touches[0].clientX < 120) showControls(); });
+}
+/* =========================================================
+   AUDIO TRAY
+========================================================= */
+const audioTray = document.getElementById("audioTray");
+const trayInfo = document.getElementById("trayInfo");
+
+// show tray when audio starts
+
+function showTray(text = "") {
+    const surahNum = Number(currentSurah);
+    const ayahNum = Number(currentAyah);
+    const surah = surahs.find(s => s.number === surahNum);
+    trayInfo.textContent =
+        `🔊 ${surah?.number}. ${surah?.name} • Ayah ${ayahNum} • ${text}`;
+    audioTray.classList.remove("hidden");
+}
+
+// hide tray
+function closeTray() {
+    audioTray.classList.add("hidden");
 }

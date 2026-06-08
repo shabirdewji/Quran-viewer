@@ -1,11 +1,3 @@
-body.light .ayah {
-    color: #111827;
-}
-
-body.light .ayah-number {
-    color: #6b7280;
-}
-
 body.light .ayah-card.read {
     opacity: 0.5;
 }
@@ -15,15 +7,12 @@ body.controls-hidden {
 }
 
 body:not(.light) .ayah-row.active {
-    color: #facc15;
+    color: var(--accent);
 }
 
-.material-symbols-rounded {
-    font-display: block;
-}
-/* -------------------------------- */
-/* GLOBAL                           */
-/* -------------------------------- */
+/* =========================================================
+   GLOBAL BASE
+========================================================= */
 
 html, body {
     height: 100%;
@@ -33,52 +22,14 @@ html, body {
     background: var(--bg);
     color: var(--text);
 }
+/* =========================================================
+   APP LAYOUT
+========================================================= */
 
 .app {
     height: 100vh;
     display: flex;
     flex-direction: column;
-}
-
-/* -------------------------------- */
-/* LEFT CONTROLS */
-/* -------------------------------- */
-
-.left-controls {
-    position: fixed;
-    left: 12px;
-    top: 50%;
-
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 2000;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-    transform: translateY(calc(-50% - 60px));
-}
-
-.left-controls.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.tool-btn.active {
-    background: var(--active-bg);
-    color: var(--active-text);
-    border-color: var(--active-bg);
-}
-/* -------------------------------- */
-/* MAIN LAYOUT */
-/* -------------------------------- */
-
-.topbar {
-    position: sticky;
-    height: 80px;
-    top: 0;
-    z-index: 9999;
-    background: var(--bg);
-    flex-shrink: 0;
 }
 
 .main {
@@ -89,8 +40,6 @@ html, body {
 
 }
 
-/* PAGE */
-
 .page {
     flex: 1;
     display: flex;
@@ -98,22 +47,71 @@ html, body {
     min-height: 0;
 }
 
-/* READER */
 .reader {
     flex: 1;
     overflow-y: auto;
-    margin-left: 220px;
+    margin-left: 10px;
+}
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar {
+    position: sticky;
+    height: 100px;
+    top: 0;
+    z-index: 9999;
+    background: var(--bg);
+    flex-shrink: 0;
+    flex-wrap: nowrap;
 }
 
-/* -------------------------------- */
-/* AYAH DISPLAY */
-/* -------------------------------- */
-
-.app {
-    height: 100vh;
+/* =========================================================
+   MAIN CONTROLS
+========================================================= */
+.tools-container {
     display: flex;
-    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 10px;
+    background: var(--surface-1);
+    margin-bottom: 12px;
 }
+.btn-group {
+    display: flex;
+    gap: 8px;          /* space between buttons in group */
+    padding: 4px;
+    background: var(--surface-2);
+    border-radius: 10px;
+}
+
+.summary-btn {
+    background: var(--surface-2);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    width: fit-content;
+}
+
+.summary-btn:hover {
+    background: var(--accent);
+    color: var(--hover-text);
+}
+
+.summary-btn.active {
+    background: var(--active-bg);
+    color: var(--active-text);
+    border-color: var(--active-bg);
+}
+
+/* =========================================================
+   AYAH SYSTEM
+========================================================= */
+
 .ayah {
     font-size: var(--ayah-font-size);
 }
@@ -122,52 +120,47 @@ html, body {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 1px;
-
-    padding: 1px 2px;
-    margin-bottom: 4px;
-    
-    border: none;
-    border-radius: 10px;
+    gap: 5px;
+    padding: 6px 2px;
+    margin-bottom: 0px;
     background-clip: padding-box;
-
     background: var(--bg);
     color: var(--text);
-    
+    border: 1px solid var(--border);
+    border-radius: 10px; 
 }
 
 .ayah-card.active {
-    background: rgba(255, 213, 79, 0.12);
-    border: 1px solid #1d4ed8;
+    background: var(--active-bg);
+    border: 1px solid var(--active-card-border);
 }
 
 .ayah-card.active .ayah {
-    color: #ffd54f;
-    text-shadow: 0 0 8px #1d4ed8;
-}
-
-.ayah-card.read {
-    opacity: 0.45;
+    color: var(--active-ayah);
+    text-shadow: 0 0 8px var(--active-glow);
 }
 
 .ayah-card.read .ayah-number {
-    color: #6b7280;
+    color: var(--read-number);
 }
 
 .ayah-card.read .ayah {
-    color: #9ca3af;
+    color: var(--read-text);
 }
+
 .ayah-number {
     flex: 0 0 40px;   /* fixed width, never shrinks */
     text-align: center;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--muted);
 }
 
 .ayah-number::after {
     content: ".";
 }
-/* WORD */
+/* =========================================================
+   HIGHLIGHT
+========================================================= */
 .word {
   cursor: pointer;
   padding: 2px 4px;
@@ -179,21 +172,22 @@ html, body {
   color: #60a5fa;
   font-weight: 500;
 }
-/* NOTE */
+
+/* =========================================================
+   NOTES
+========================================================= */
 
 .note-dot {
     flex: 0 0 12px;   /* prevents squishing */
-
     width: 10px;
     height: 10px;
     border-radius: 50%;
-
-    border: 2px solid #facc15;
+    border: 2px solid var(--note-color);
     cursor: pointer;
 }
 
 .note-dot.has-note {
-    background: #facc15;
+    background: var(--note-color);
 }
 
 .note-popup {
@@ -205,29 +199,25 @@ html, body {
 .note-text {
     width: 100%;
     min-height: 140px;
-
     resize: vertical;
-
     padding: 10px;
     font-size: 14px;
     line-height: 1.5;
-
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
     border-radius: 8px;
     box-sizing: border-box;
-
-    background: white;
-    color: #111;
+    background: var(--surface);
+    color: var(--text);
 }
+
 .note-header {
     font-weight: 600;
     margin-bottom: 8px;
-    color: #92400e;
+    color: var(--note-header);
 }
 
 .note-actions {
     display: flex;
-
     margin-top: 10px;
     gap: 10px;
 }
@@ -237,7 +227,7 @@ html, body {
     margin: 0 10px;
     background: var(--button-bg);
     color: var(--button-text);
-    border: 1px solid #444;
+    border: 1px solid var(--button-border);
     border-radius: 6px;
     cursor: pointer;
 }
@@ -252,15 +242,14 @@ html, body {
     cursor: pointer;
 }
 
-
-
 .close-note:hover {
-    background: #d1d5db;
+    background: var(--close-hover);
 }
 
-/* -------------------------------- */
-/* TOP BAR / SEARCH */
-/* -------------------------------- */
+/* =========================================================
+   SEARCH
+========================================================= */
+
 .search-bar {
     margin-top: 10px;
     display: flex;
@@ -272,58 +261,10 @@ html, body {
     flex: 2;
     padding: 8px;
     border-radius: 10px;
-    background: var(--card);
+    background: var(--card-bg);
     border: 1px solid var(--border);
     color: var(--text);
     outline: none;
-}
-
-.ayah-info {
-    position: static !important;
-    margin-top: 10px;
-    font-size: 13px;
-    color: var(--muted);
-    background: rgba(255,255,255,0.06);
-    padding: 6px 10px;
-    border-radius: 999px;
-    display: inline-block;
-}
-
-/* -------------------------------- */
-/* GLASS NAV BUTTONS */
-/* -------------------------------- */
-.nav-arrows {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 20px;
-
-    display: flex;
-    justify-content: space-between;
-
-    padding: 0 18px;
-}
-
-.glass-btn {
-    cursor: pointer;
-    transition: transform 0.15s ease, background-color 0.15s ease;
-    outline: 2px solid red;
-    color: var(--icon-color);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-
-    box-shadow:
-        0 10px 25px var(--glass-shadow),
-        inset 0 1px 0 rgba(255,255,255,0.15);
-
-}
-
-.glass-btn:hover {
-    transform: scale(1.1);
-}
-
-.glass-btn:active {
-    transform: scale(0.92);
 }
 
 /* -------------------------------- */
@@ -335,8 +276,8 @@ html, body {
     bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.85);
-    color: white;
+    background: var(--toast-bg);
+    color: var(--toast-text);
     padding: 10px 16px;
     border-radius: 14px;
     opacity: 0;
@@ -347,80 +288,17 @@ html, body {
     opacity: 1;
 }
 
-/* -------------------------------- */
-/* BOOKMARKS */
-/* -------------------------------- */
-
-#bookmarkView {
-    margin-left: 70px;
-}
-
-.tool-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 6px;
-}
-
-.tool-group.compact {
-    gap: 6px;
-    padding: 6px;
-    border-radius: 12px;
-}
-
-.tool-btn {
-    background: var(--surface-2);
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    border: none;
-    border-radius: 12px;
-
-    padding: 8px 10px;
-    min-width: 180px;
-
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.tool-btn:hover {
-    background: #facc15;
-    color: black;
-}
-
-/* optional highlight for important actions */
-.tool-btn.primary {
-    background: #4caf50;
-    font-weight: bold;
-}
-
 .read-toggle {
     width: 18px;
     height: 18px;
+    margin: 0;
+    flex: 0 0 18px;
+    color: var(--accent);
 }
 
-.popup {
-    position: absolute;
-    max-width: 250px;
-    background: white;
-    color: black;
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    z-index: 9999;
-}
-.popup,
-#summaryPopup,
-.popup-content {
-    background: var(--popup-bg);
-    color: var(--popup-text);
-}
+/* =========================================================
+   SUMMARY / POPUPS
+========================================================= */
 
 .summary-btn {
     padding: 6px 12px;
@@ -467,26 +345,27 @@ html, body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-
     width: 60%;
     max-width: 700px;
-
     background: var(--popup-bg);
     color: var(--popup-text);
-
     padding: 20px;
     border-radius: 12px;
-
     z-index: 999999;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
-
-.hidden {
-    display: none !important;
+.popup {
+    position: absolute;
+    max-width: 250px;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 9999;
 }
-/* -------------------------------- */
-/* SEARCH                           */
-/* -------------------------------- */
+/* =========================================================
+   SEARCH
+========================================================= */
+
 .surah-search {
     position: relative;
     z-index: 999999;
@@ -509,20 +388,15 @@ html, body {
     top: 100%;
     left: 0;
     right: 0;
-
     margin-top: 4px;
-
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
-
     max-height: 300px;
     overflow-y: auto;
-
     z-index: 5000;
     box-shadow: 0 4px 12px rgba(0,0,0,.2);
     backdrop-filter: blur(10px);
-
 }
 
 .search-item {
@@ -535,27 +409,109 @@ html, body {
     background: var(--accent);
     color: var(--accent-text);
 }
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+.progress-display {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    border: 1px solid var(--border);
+}
 /* -------------------------------- */
 /* MOBILE */
 /* -------------------------------- */
 
- 
-@media (max-width: 480px) {
-    .page {
-        padding-left: 8px;
-        padding-right: 8px;
+@media (max-width: 768px) {
+
+    .tools-container {
+        flex-direction: row;   /* flatten into one compact bar */
+        overflow-x: auto;
+        gap: 6px;
     }
 
-    .reader {
-        padding-left: 6px;
-        padding-right: 6px;
+    .btn-row {
+        display: flex;
+        gap: 6px;
     }
 
-    .main {
-        transform: translateX(-10px);
+    .summary-btn {
+        padding: 8px;
+        min-width: auto;
+        font-size: 0;   /* hides text safely */
     }
 
-    .ayah {
-        font-size: calc(var(--ayah-font-size) - 4px);
+    .summary-btn .btn-text {
+        display: none;  /* removes label */
     }
+
+    select {
+        font-size: 0;
+        width: 40px;    /* compact dropdown */
+    }
+
+}
+/* =========================================================
+   AUDIO TRAY
+========================================================= */
+.audio-tray {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 10px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+    z-index: 99999;
+    transition: 0.2s ease;
+}
+
+.tray-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.tray-btn {
+    background: var(--surface-2);
+    border: none;
+    color: var(--text);
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 50%;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s;
+}
+
+.tray-btn:hover {
+    background: var(--accent);
+    color: var(--hover-text)
+}
+
+.tray-info {
+    font-size: 13px;
+    color: var(--text);
+    padding: 0 6px;
+}
+
+.hidden {
+    display: none !important;
 }
