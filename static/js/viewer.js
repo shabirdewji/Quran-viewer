@@ -33,26 +33,6 @@ const pageData = window.pageData || null;
 /* =========================================================
    INIT
 ========================================================= */
-function observeLeftControls() {
-    const controls = document.querySelector(".left-controls");
-    if (!controls) return;
-
-    const observer = new MutationObserver(() => {
-        const hidden = controls.classList.contains("hidden");
-
-        if (hidden) {
-            document.body.classList.add("controls-hidden");
-        } else {
-            document.body.classList.remove("controls-hidden");
-        }
-    });
-
-    observer.observe(controls, {
-        attributes: true,
-        attributeFilter: ["class"]
-    });
-}
-
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -61,12 +41,9 @@ async function init() {
         console.warn("pageData missing");
         return;
     }
-
     await setupApp();
     await hydrateApp();
     await postRender();
-
-
 }
 
 async function setupApp() {
@@ -82,12 +59,11 @@ async function setupApp() {
     setupControlsAutoHide();
     setupSummary();
     setupLinks();
-
-    observeLeftControls();
     applyFontSize();
     updateAyahInfo();
     loadreadProgress();
 }
+
 async function hydrateApp() {
     await loadReadStates(currentSurah);
     await waitForAyahs();
@@ -105,7 +81,7 @@ async function hydrateApp() {
 
 async function postRender() {
     await waitForAyahs();   // 1. render .ayah text
-    wrapWords();         // 2. convert text → spans
+    wrapWords();            // 2. convert text → spans
     await loadHighlights(); // 3. apply DB highlights
 
     focusAyah(currentSurah, currentAyah); // 4. now safe
@@ -212,6 +188,7 @@ function setupDropdowns() {
     const ayahSelect = $("ayahSelect");
 
     if (!surahSelect || !ayahSelect) return;
+
     surahSelect.value = String(currentSurah);
     surahSelect.onchange = (e) => window.location.href = `/view/${e.target.value}/1`;
     const total = surahCounts[currentSurah] || 0;

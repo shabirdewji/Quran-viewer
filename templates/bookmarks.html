@@ -6,27 +6,6 @@
 <title>Bookmarks</title>
 <style>
 
-/*
-.verse {
-    padding: 15px;
-    border-bottom: 1px solid var(--border);
-}
-*/
-/*
-.row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-}
-*/
-
-.ayah-row.active {
-    background: yellow !important;
-    border: 2px solid red !important;
-}
-
 .left {
     display: flex;
     flex-direction: column;
@@ -34,76 +13,25 @@
     overflow: hidden;
 }
 
-/*
-.ref {
-    color: var(--muted);
-}
-*/
-
 .label-row {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-/*
-.label {
-    color: var(--text);
-}
-*/
-
 .speaker-btn:hover {
     opacity: 0.8;
 }
-/*
-.actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-    align-items: center;
-}
-*/
-
-/*
-.open {
-    color: var(--accent);
-}
-*/
 
 .back-btn {
     background: var(--card);
     color: var(--text);
 }
 
-/*
-.bookmark-card.playing {
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 20px var(--shadow);
-}
-*/
-
 .col-ref,
 .card-ref {
     color: var(--muted);
 }
-/*
-.col-label,
-.card-label {
-    color: var(--text);
-}
-*/
-/*
-.btn {
-    background: var(--card);
-    color: var(--text);
-}
-
-
-.btn-open {
-    background: var(--card);
-    color: var(--text);
-}
-*/
 
 .bookmark-grid {
     display: grid;
@@ -140,22 +68,19 @@
     margin-top: auto;
 }
 
-.card.playing {
-    border: 1px solid var(--accent);
-    background: rgba(250, 204, 21, 0.10);
-    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.15);
-}
-
+/*
 #playerBox .ayah-row.active {
     background: rgba(250, 204, 21, 0.25) !important;
     border-left: 4px solid #facc15 !important;
     transition: all 0.2s ease;
 }
+*/
+
 .ayah-card.active,
 .ayah-row.active,
 .card.playing {
     background: var(--active-bg);
-    border-left: 4px solid var(--active-border);
+    border: 2px solid var(--active-border);
     box-shadow: 0 0 12px rgba(250, 204, 21, 0.15);
 }
 .ayah-card {
@@ -214,12 +139,6 @@
     color: var(--text);
     line-height: 1.4;
 }
-.card-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-}
 
 button {
     border: none;
@@ -237,13 +156,18 @@ button:hover {
     color: #111;
 }
 
+.label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card-ref,
+.card-label {
+    margin: 0;
+}
 
 </style>
-
-
-
-
-
 
 </head>
 <body>
@@ -259,9 +183,6 @@ button:hover {
 <h2>Bookmarked Verses</h2>
 
 <div id="list" class="bookmark-grid">Loading...</div>
-
-
-
 
 <script>
 const currentAudio = new Audio();
@@ -298,12 +219,11 @@ function renderBookmarks(data) {
         card.dataset.ayah = v.ayah;
 
         card.innerHTML = `
-            <div class="card-ref">${v.surah}:${v.ayah}</div>
-            <div class="card-label">${v.label || ""}</div>
+            ${v.surah}:${v.ayah} ${v.label || ""}
 
             <div class="card-actions">
                 <button class="btn btn-ghost play-btn">🔊</button>
-                <button class="delete-btn">🗑️</button>
+                <button class="btn btn-ghost delete-btn">🗑️</button>
             </div>
         `;
 

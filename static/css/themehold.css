@@ -3,9 +3,6 @@
     --text: #E4E4E7;
     --hover-text: white;
 
-    --surface: #1a1a1a;
-    --surface-2: #1c2533;
-
     --muted: #888;
     --border: #333;
 
@@ -26,9 +23,14 @@
 
     --button-bg: #333;
     --button-text: #fff;
-    --button-border: #444;
-
     --card-bg: #1a1a1a;
+
+    --surface: #1a1a1a;
+    --surface-2: #1c2533;
+
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: rgba(0, 0, 0, 0.5);
 
     --icon-color: #fff;
 
@@ -38,6 +40,7 @@
     --read-number: #6b7280;
     --read-text: #9ca3af;
 
+    --button-border: #444;
     --close-hover: #d1d5db;
     --toast-bg: rgba(0,0,0,0.85);
     --toast-text: #fff;
@@ -51,6 +54,7 @@ body.light {
 
     --surface: #f6f6f6;
     --surface-2: #eaf1ff;
+
 
     --muted: #666;
     --border: #e5e5e5;
@@ -79,6 +83,7 @@ body.light {
 
     --card-bg: rgba(255, 255, 255, 0.08);
 
+    
 }
 
 /* =========================================================
@@ -103,17 +108,13 @@ button {
 }
 
 /* DARK MODE */
-body:not(.light)
-.ayah-row.active
-.ayah {
+body:not(.light) .ayah-row.active .ayah {
     color: #facc15;
     --accent-text: #000; /* or white depending on accent */
 }
 
 /* LIGHT MODE */
-body.light 
-.ayah-row.active 
-.ayah {
+body.light .ayah-row.active .ayah {
     color: #1d4ed8;
 }
 
@@ -168,7 +169,6 @@ body.light
     color: white;
 }
 
-/*
 .btn-danger {
     background: var(--danger);
     color: #fff;
@@ -187,7 +187,6 @@ body.light
     opacity: 0.85;
     transform: translateY(-1px);
 }
-*/
 
 /* bookmark highlight */
 .highlight {

@@ -8,6 +8,7 @@ body.controls-hidden {
 
 body:not(.light) .ayah-row.active {
     color: var(--accent);
+    background: var(--bg);
 }
 
 /* =========================================================
@@ -21,7 +22,13 @@ html, body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
     color: var(--text);
+    line-height: 1.6;
+    letter-spacing: 0.01em;
 }
+p {
+    max-width: 70ch;
+}
+
 /* =========================================================
    APP LAYOUT
 ========================================================= */
@@ -37,7 +44,6 @@ html, body {
     flex-direction: column;
     min-height: 100vh;
     transform: none;
-
 }
 
 .page {
@@ -116,13 +122,18 @@ html, body {
     font-size: var(--ayah-font-size);
 }
 
+.ayah-row.active .ayah-card {
+    background: var(--active-bg) !important;   
+}
+
 .ayah-card {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 5px;
-    padding: 6px 2px;
-    margin-bottom: 0px;
+    gap: 12px;
+    padding: 12px 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     background-clip: padding-box;
     background: var(--bg);
     color: var(--text);
@@ -131,12 +142,13 @@ html, body {
 }
 
 .ayah-card.active {
-    background: var(--active-bg);
+    background: var(--active-bg) !important;
     border: 1px solid var(--active-card-border);
 }
 
 .ayah-card.active .ayah {
     color: var(--active-ayah);
+    background: var(--active-bg);
     text-shadow: 0 0 8px var(--active-glow);
 }
 

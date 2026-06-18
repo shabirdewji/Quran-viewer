@@ -503,6 +503,7 @@ def update_surah_summary():
     """, (text, surah))
     conn.commit()
     conn.close()
+
     return jsonify({"status": "ok"})
 
 @app.route("/api/highlight", methods=["POST"])
@@ -561,7 +562,9 @@ def get_wiki_link():
         WHERE surah = ?
         LIMIT 1
     """, (surah,))
+
     row = cur.fetchone()
+
     return jsonify({
         "url": row["url"] if row else None
     })
